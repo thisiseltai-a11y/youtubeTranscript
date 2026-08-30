@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, urlparse
 import yt_dlp
 
 from . import ytdlp_common
-from .exceptions import InvalidURLError, VideoUnavailableError
+from .exceptions import InvalidURLError, VideoUnavailableError, YouTubeBlockedError
 
 _VIDEO_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{11}$")
 
@@ -89,6 +89,22 @@ def get_video_metadata(video_id: str) -> VideoMetadata:
     except yt_dlp.utils.DownloadError as exc:
         message = str(exc)
         lowered = message.lower()
+
+        # YouTube's bot-check response is easy to mistake for "video is
+        # actually unavailable" - it isn't. It shows up on cloud/datacenter
+        # IPs (including Vercel's) for otherwise-normal, public videos, so
+        # it needs its own error rather than being told to the user as
+        # "this video is private/deleted".
+        if any(
+            phrase in lowered
+            for phrase in ("sign in to confirm", "not a bot", "confirm you're not a bot")
+        ):
+            raise YouTubeBlockedError(
+                "YouTube is blocking automated requests from this server right "
+                "now - this is a cloud-IP rate limit, not a problem with the "
+                "video itself. See the README's YTDLP_COOKIES_B64 workaround."
+            ) from exc
+
         if any(
             phrase in lowered
             for phrase in (
@@ -97,8 +113,8 @@ def get_video_metadata(video_id: str) -> VideoMetadata:
                 "has been removed",
                 "account associated with this video has been terminated",
                 "this video is not available",
-                "sign in to confirm",
-                "age",
+                "age-restricted",
+                "age restricted",
             )
         ):
             raise VideoUnavailableError(

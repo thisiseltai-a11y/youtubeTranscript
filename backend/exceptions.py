@@ -22,6 +22,16 @@ class VideoUnavailableError(TranscriptAppError):
     status_code = 404
 
 
+class YouTubeBlockedError(TranscriptAppError):
+    """YouTube is rate-limiting/blocking requests from this server's IP
+    (common on cloud/datacenter IPs). Not the same thing as the video
+    actually being unavailable - keep this distinct so the error message
+    doesn't lie about the cause.
+    """
+
+    status_code = 503
+
+
 class VideoTooLongError(TranscriptAppError):
     status_code = 422
 

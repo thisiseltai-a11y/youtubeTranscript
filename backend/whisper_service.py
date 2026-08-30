@@ -21,7 +21,12 @@ import yt_dlp
 from openai import OpenAI
 
 from . import config, ytdlp_common
-from .exceptions import NoAudioError, TranscriptionFailedError, VideoUnavailableError
+from .exceptions import (
+    NoAudioError,
+    TranscriptionFailedError,
+    VideoUnavailableError,
+    YouTubeBlockedError,
+)
 
 FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
 
@@ -59,6 +64,15 @@ def _download_audio(video_id: str, workdir: Path) -> Path:
             ydl.download([url])
     except yt_dlp.utils.DownloadError as exc:
         message = str(exc).lower()
+        if any(
+            phrase in message
+            for phrase in ("sign in to confirm", "not a bot", "confirm you're not a bot")
+        ):
+            raise YouTubeBlockedError(
+                "YouTube is blocking automated requests from this server right "
+                "now - this is a cloud-IP rate limit, not a problem with the "
+                "video itself. See the README's YTDLP_COOKIES_B64 workaround."
+            ) from exc
         if "private" in message or "unavailable" in message or "removed" in message:
             raise VideoUnavailableError(
                 "This video is private, deleted, or otherwise unavailable."
