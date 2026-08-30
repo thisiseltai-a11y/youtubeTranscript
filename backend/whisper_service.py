@@ -1,21 +1,31 @@
 """High-accuracy fallback: download audio with yt-dlp, transcribe with
 OpenAI's Whisper API. Used when official captions are missing or are
 auto-generated (lower quality) and Whisper is configured.
+
+Uses imageio-ffmpeg's bundled static ffmpeg binary rather than relying on
+a system install - that binary ships inside the Python package itself, so
+it works in a read-only serverless filesystem (Vercel) the same way it
+does locally, with no apt/system dependency either way.
 """
 from __future__ import annotations
 
 import math
+import re
 import shutil
 import subprocess
-import tempfile
 import uuid
 from pathlib import Path
 
+import imageio_ffmpeg
 import yt_dlp
 from openai import OpenAI
 
-from . import config
+from . import config, ytdlp_common
 from .exceptions import NoAudioError, TranscriptionFailedError, VideoUnavailableError
+
+FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
+
+_DURATION_RE = re.compile(r"Duration:\s*(\d+):(\d+):(\d+\.\d+)")
 
 
 def _download_audio(video_id: str, workdir: Path) -> Path:
@@ -31,6 +41,7 @@ def _download_audio(video_id: str, workdir: Path) -> Path:
         "format": "bestaudio/best",
         "outtmpl": out_template,
         "noplaylist": True,
+        "ffmpeg_location": FFMPEG_BIN,
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -41,6 +52,7 @@ def _download_audio(video_id: str, workdir: Path) -> Path:
         "postprocessor_args": {
             "ffmpeg": ["-ac", "1"],  # mono
         },
+        **ytdlp_common.common_ydl_opts(),
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -59,6 +71,23 @@ def _download_audio(video_id: str, workdir: Path) -> Path:
     return audio_path
 
 
+def _probe_duration_seconds(path: Path) -> float:
+    """Read the audio duration via `ffmpeg -i` (no output file), parsing
+    its stderr banner. Avoids depending on ffprobe, which imageio-ffmpeg
+    doesn't bundle.
+    """
+    result = subprocess.run(
+        [FFMPEG_BIN, "-i", str(path)],
+        capture_output=True,
+        text=True,
+    )
+    match = _DURATION_RE.search(result.stderr)
+    if not match:
+        return 0.0
+    hours, minutes, seconds = match.groups()
+    return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+
+
 def _split_audio(audio_path: Path, workdir: Path, chunk_seconds: int) -> list[Path]:
     """Split into fixed-length chunks with ffmpeg's segment muxer (stream
     copy - fast, no re-encode) so each upload stays under Whisper's size
@@ -68,7 +97,7 @@ def _split_audio(audio_path: Path, workdir: Path, chunk_seconds: int) -> list[Pa
     chunk_dir.mkdir(exist_ok=True)
     pattern = str(chunk_dir / "chunk_%04d.mp3")
     cmd = [
-        "ffmpeg",
+        FFMPEG_BIN,
         "-y",
         "-i",
         str(audio_path),
@@ -84,10 +113,6 @@ def _split_audio(audio_path: Path, workdir: Path, chunk_seconds: int) -> list[Pa
     ]
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
-    except FileNotFoundError as exc:
-        raise TranscriptionFailedError(
-            "ffmpeg is not installed. Install ffmpeg to use the Whisper fallback."
-        ) from exc
     except subprocess.CalledProcessError as exc:
         raise TranscriptionFailedError(f"Failed to split audio: {exc.stderr}") from exc
 
@@ -101,24 +126,7 @@ def _chunks_for_upload(audio_path: Path, workdir: Path) -> list[Path]:
 
     # Estimate a chunk length that keeps each piece under the size cap,
     # then let ffmpeg cut on that interval.
-    duration_probe = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            str(audio_path),
-        ],
-        capture_output=True,
-        text=True,
-    )
-    try:
-        total_duration = float(duration_probe.stdout.strip())
-    except ValueError:
-        total_duration = 0.0
+    total_duration = _probe_duration_seconds(audio_path)
 
     if total_duration > 0:
         bytes_per_second = size / total_duration

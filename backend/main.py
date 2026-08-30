@@ -46,7 +46,11 @@ def post_rewrite(req: RewriteRequest):
     return RewriteResponse(rewritten_text=rewritten)
 
 
-# --- Serve the static frontend -------------------------------------------
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
-if FRONTEND_DIR.exists():
+# --- Serve the static frontend (local dev only) ---------------------------
+# On Vercel, everything under public/ is served directly by the platform
+# (and takes precedence over the vercel.json rewrite into this app), so
+# mounting it here too would be redundant - and the filesystem there is
+# read-only outside of /tmp anyway.
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "public"
+if FRONTEND_DIR.exists() and not config.IS_VERCEL:
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")

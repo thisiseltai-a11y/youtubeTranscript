@@ -42,11 +42,14 @@ def get_transcript(url: str, force_refresh: bool = False) -> TranscriptResponse:
     segments: list[dict] = []
 
     manual_available = caption_result is not None and not caption_result.is_generated
+    duration = metadata["duration"] or 0
+    whisper_too_long = duration > config.WHISPER_MAX_DURATION_SECONDS
+    whisper_eligible = config.WHISPER_ENABLED and not whisper_too_long
 
     if manual_available:
         source = "manual_captions"
         segments = caption_result.segments
-    elif config.WHISPER_ENABLED:
+    elif whisper_eligible:
         try:
             segments = whisper_service.transcribe_via_whisper(video_id)
             source = "whisper"
@@ -63,10 +66,26 @@ def get_transcript(url: str, force_refresh: bool = False) -> TranscriptResponse:
     elif caption_result is not None:
         source = "auto_captions"
         segments = caption_result.segments
-        warning = (
-            "Only auto-generated captions are available for this video and "
-            "the Whisper fallback isn't configured (set OPENAI_API_KEY for "
-            "higher accuracy on videos without human-made captions)."
+        if config.WHISPER_ENABLED and whisper_too_long:
+            cap_minutes = config.WHISPER_MAX_DURATION_SECONDS / 60
+            warning = (
+                f"This video is longer than the {cap_minutes:.0f}-minute cap "
+                "configured for the Whisper fallback on this deployment, so "
+                "YouTube's auto-generated captions were used instead, which "
+                "may contain errors."
+            )
+        else:
+            warning = (
+                "Only auto-generated captions are available for this video and "
+                "the Whisper fallback isn't configured (set OPENAI_API_KEY for "
+                "higher accuracy on videos without human-made captions)."
+            )
+    elif whisper_too_long:
+        cap_minutes = config.WHISPER_MAX_DURATION_SECONDS / 60
+        raise TranscriptionFailedError(
+            "No captions are available for this video, and it's longer than "
+            f"the {cap_minutes:.0f}-minute cap configured for the Whisper "
+            "fallback on this deployment."
         )
     else:
         raise TranscriptionFailedError(

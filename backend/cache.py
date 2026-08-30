@@ -1,14 +1,40 @@
-"""Simple file-based cache, keyed by video ID.
+"""Transcript cache, keyed by video ID.
 
-A JSON file per video is plenty for a local prototype and needs no extra
-infra. Swap for Redis/SQLite later if this needs to run multi-instance.
+Two backends:
+- Upstash Redis (via the "Upstash for Redis" Vercel Marketplace
+  integration, which sets KV_REST_API_URL / KV_REST_API_TOKEN) - durable,
+  shared across serverless invocations. Used automatically when configured.
+- A local JSON file per video under CACHE_DIR - used for local dev, or as
+  a best-effort (non-durable) fallback if the KV env vars aren't set on
+  Vercel.
+
+Either way, a cache failure never breaks the main request - we log and
+treat it as a miss/no-op rather than raising.
 """
 from __future__ import annotations
 
 import json
+import logging
 from typing import Optional
 
+import requests
+
 from . import config
+
+logger = logging.getLogger(__name__)
+
+_KEY_PREFIX = "transcript:"
+
+
+def _kv_command(command: list) -> object:
+    resp = requests.post(
+        config.KV_REST_API_URL,
+        headers={"Authorization": f"Bearer {config.KV_REST_API_TOKEN}"},
+        json=command,
+        timeout=5,
+    )
+    resp.raise_for_status()
+    return resp.json().get("result")
 
 
 def _path(video_id: str):
@@ -16,6 +42,19 @@ def _path(video_id: str):
 
 
 def get(video_id: str) -> Optional[dict]:
+    if config.KV_ENABLED:
+        try:
+            raw = _kv_command(["GET", _KEY_PREFIX + video_id])
+        except (requests.RequestException, ValueError) as exc:
+            logger.warning("KV cache read failed, treating as a miss: %s", exc)
+            return None
+        if not raw:
+            return None
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return None
+
     path = _path(video_id)
     if not path.exists():
         return None
@@ -26,5 +65,16 @@ def get(video_id: str) -> Optional[dict]:
 
 
 def set(video_id: str, data: dict) -> None:
-    path = _path(video_id)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+    payload = json.dumps(data, ensure_ascii=False)
+
+    if config.KV_ENABLED:
+        try:
+            _kv_command(["SET", _KEY_PREFIX + video_id, payload])
+        except requests.RequestException as exc:
+            logger.warning("KV cache write failed (continuing without caching): %s", exc)
+        return
+
+    try:
+        _path(video_id).write_text(payload)
+    except OSError as exc:
+        logger.warning("Local cache write failed (continuing without caching): %s", exc)

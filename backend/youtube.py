@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 
 import yt_dlp
 
+from . import ytdlp_common
 from .exceptions import InvalidURLError, VideoUnavailableError
 
 _VIDEO_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{11}$")
@@ -80,6 +81,7 @@ def get_video_metadata(video_id: str) -> VideoMetadata:
         "no_warnings": True,
         "skip_download": True,
         "noplaylist": True,
+        **ytdlp_common.common_ydl_opts(),
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
