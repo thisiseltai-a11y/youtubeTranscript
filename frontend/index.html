@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube Transcript + AI Rewrite</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>YouTube Transcript &amp; AI Rewrite</h1>
+      <p class="sub">Paste a YouTube link, get a clean transcript, then rewrite it with Claude.</p>
+    </header>
+
+    <section class="url-bar">
+      <form id="url-form">
+        <input
+          id="url-input"
+          type="text"
+          placeholder="https://www.youtube.com/watch?v=..."
+          autocomplete="off"
+          required
+        />
+        <button id="submit-btn" type="submit">Get Transcript</button>
+      </form>
+      <div id="status" class="status" hidden></div>
+    </section>
+
+    <section id="video-meta" class="video-meta" hidden></section>
+
+    <section id="transcript-section" class="panels" hidden>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Original Transcript</h2>
+          <div class="panel-actions">
+            <span id="source-badge" class="badge"></span>
+            <button id="copy-original" type="button">Copy</button>
+          </div>
+        </div>
+        <textarea id="original-text" spellcheck="false"></textarea>
+      </div>
+
+      <div class="panel" id="rewrite-panel">
+        <div class="panel-header">
+          <h2>Rewritten</h2>
+          <div class="panel-actions">
+            <button id="copy-rewrite" type="button" hidden>Copy</button>
+          </div>
+        </div>
+
+        <div id="rewrite-controls" class="rewrite-controls">
+          <label for="preset-select">Rewrite type</label>
+          <select id="preset-select">
+            <option value="clean_filler">Clean up filler words (keep voice)</option>
+            <option value="shorten">Shorten</option>
+            <option value="youtube_shorts">Adapt for YouTube Shorts</option>
+            <option value="tiktok_caption">Adapt for TikTok caption</option>
+            <option value="blog_post">Adapt for blog post</option>
+            <option value="new_topic">Same tone, new topic/product</option>
+            <option value="custom">Custom instructions</option>
+          </select>
+
+          <label for="topic-input" id="topic-label" hidden>New topic / product</label>
+          <input id="topic-input" type="text" placeholder="e.g. a new cold-brew coffee maker" hidden />
+
+          <label for="instructions-input">Additional instructions (optional)</label>
+          <textarea id="instructions-input" rows="2" placeholder="Anything else Claude should do or avoid..."></textarea>
+
+          <button id="rewrite-btn" type="button">Rewrite with Claude</button>
+        </div>
+
+        <textarea id="rewrite-text" spellcheck="false" placeholder="Your rewritten transcript will appear here." hidden></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
