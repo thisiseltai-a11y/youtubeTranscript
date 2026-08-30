@@ -85,15 +85,25 @@ There's no cap on Whisper when running locally (`uvicorn`) since there's no serv
 YouTube sometimes rate-limits or blocks requests (both metadata lookups and
 audio downloads) that come from datacenter/cloud IP ranges, including
 Vercel's - you may see errors mentioning "Sign in to confirm you're not a
-bot" that don't happen locally. If that shows up in production, the
-standard workaround is passing along a real browser session's cookies:
+bot" (or a generic "Video unavailable") that don't happen locally, even on
+videos that are obviously public.
 
-1. Export your youtube.com cookies as a Netscape-format `cookies.txt` (e.g. the "Get cookies.txt" browser extension) while logged into a real YouTube account.
-2. Base64-encode the file: `base64 -w0 cookies.txt` (macOS: `base64 -i cookies.txt`).
-3. Set that string as the `YTDLP_COOKIES_B64` env var in Vercel.
+Two mitigations, in order:
 
-This isn't guaranteed to eliminate blocking entirely, and cookies expire -
-treat it as a mitigation, not a permanent fix.
+1. **Baked in by default**: requests go through YouTube's mobile client API
+   surface (`player_client: [android, ios, web]` in `backend/ytdlp_common.py`)
+   instead of only the main web client, since the web client is what
+   usually triggers the bot-check wall on cloud IPs. No setup needed.
+2. **If that's not enough**, pass along a real browser session's cookies:
+   1. Export your youtube.com cookies as a Netscape-format `cookies.txt` (e.g. the "Get cookies.txt" browser extension) while logged into a real YouTube account.
+   2. Base64-encode the file: `base64 -w0 cookies.txt` (macOS: `base64 -i cookies.txt`).
+   3. Set that string as the `YTDLP_COOKIES_B64` env var in Vercel.
+
+Neither is guaranteed to eliminate blocking entirely (and cookies expire) -
+treat these as mitigations, not a permanent fix. If errors persist, the
+app now shows the actual underlying yt-dlp error message rather than a
+guessed category, which is the fastest way to tell what's actually
+happening.
 
 ### Caching
 
