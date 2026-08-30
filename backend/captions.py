@@ -11,6 +11,7 @@ from youtube_transcript_api._errors import (
     VideoUnavailable,
 )
 
+from . import proxy_config
 from .exceptions import VideoUnavailableError
 
 # Languages tried in order. English first since that's the common case;
@@ -30,7 +31,7 @@ def fetch_captions(video_id: str) -> CaptionResult | None:
     ones, else None if the video has no captions at all (or they're
     disabled/unreachable).
     """
-    api = YouTubeTranscriptApi()
+    api = YouTubeTranscriptApi(proxy_config=proxy_config.get_webshare_config())
     try:
         transcript_list = api.list(video_id)
     except VideoUnavailable as exc:

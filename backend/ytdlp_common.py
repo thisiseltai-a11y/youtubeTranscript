@@ -6,7 +6,7 @@ from __future__ import annotations
 import base64
 from pathlib import Path
 
-from . import config
+from . import config, proxy_config
 
 _cookiefile_path: Path | None = None
 _resolved = False
@@ -44,6 +44,10 @@ def common_ydl_opts() -> dict:
     - `cookiefile`: only added when YTDLP_COOKIES_B64 is configured - a
       stronger fix if the client-fallback trick above isn't enough on its
       own (see README).
+    - `proxy`: only added when WEBSHARE_PROXY_USERNAME/PASSWORD are
+      configured - routes requests through a rotating residential IP pool
+      instead of this server's own IP. The scalable fix (many concurrent
+      users, not one identity); see README.
     """
     opts: dict = {
         "extractor_args": {"youtube": {"player_client": ["android", "ios", "web"]}},
@@ -51,4 +55,7 @@ def common_ydl_opts() -> dict:
     cookiefile = _get_cookiefile()
     if cookiefile:
         opts["cookiefile"] = str(cookiefile)
+    proxy_url = proxy_config.get_proxy_url()
+    if proxy_url:
+        opts["proxy"] = proxy_url
     return opts

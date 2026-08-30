@@ -61,7 +61,8 @@ Or connect the GitHub repo at vercel.com/new and it'll pick up
 | `ANTHROPIC_API_KEY` | Yes | Powers the rewrite feature. |
 | `OPENAI_API_KEY` | No | Enables the Whisper fallback. Without it, videos lacking human-made captions fall back to auto-captions. |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Recommended | Set automatically when you add the **Upstash for Redis** integration from the Vercel Marketplace. Without it, caching still works but only as a best-effort, non-durable fallback in `/tmp`. |
-| `YTDLP_COOKIES_B64` | No | See **YouTube blocking cloud IPs** below. |
+| `WEBSHARE_PROXY_USERNAME` / `WEBSHARE_PROXY_PASSWORD` | Recommended for real traffic | See **YouTube blocking cloud IPs** below - the scalable fix. |
+| `YTDLP_COOKIES_B64` | No | See **YouTube blocking cloud IPs** below - a single-identity fallback. |
 | `WHISPER_MAX_DURATION_SECONDS` | No | Default `300` (5 min) on Vercel. Raise this only alongside `maxDuration` in `vercel.json` - see below. |
 
 ### Whisper duration cap (why it exists)
@@ -88,22 +89,35 @@ Vercel's - you may see errors mentioning "Sign in to confirm you're not a
 bot" (or a generic "Video unavailable") that don't happen locally, even on
 videos that are obviously public.
 
-Two mitigations, in order:
+Three mitigations, roughly in order of how well they scale:
 
-1. **Baked in by default**: requests go through YouTube's mobile client API
-   surface (`player_client: [android, ios, web]` in `backend/ytdlp_common.py`)
-   instead of only the main web client, since the web client is what
-   usually triggers the bot-check wall on cloud IPs. No setup needed.
-2. **If that's not enough**, pass along a real browser session's cookies:
+1. **Baked in by default, free**: requests go through YouTube's mobile client
+   API surface (`player_client: [android, ios, web]` in
+   `backend/ytdlp_common.py`) instead of only the main web client, since the
+   web client is what usually triggers the bot-check wall on cloud IPs. No
+   setup needed, but doesn't hold up under real traffic.
+2. **Rotating residential proxies (recommended for anything beyond solo
+   testing)**: requests route through a large pool of real residential IPs
+   via [Webshare](https://www.webshare.io) instead of this server's own IP,
+   so no single IP takes on enough volume to get flagged - this is what
+   `youtube-transcript-api` itself (the library behind the captions path)
+   recommends for exactly this problem.
+   1. Create a Webshare account and buy a **"Residential"** proxy package (their free tier - 10 proxies, 1GB/month - is enough to test with; do **not** buy "Proxy Server" or "Static Residential", those don't rotate).
+   2. Grab your **Proxy Username** and **Proxy Password** from https://dashboard.webshare.io/proxy/settings (two separate values, not one combined key).
+   3. Set `WEBSHARE_PROXY_USERNAME` and `WEBSHARE_PROXY_PASSWORD` in Vercel (both required together).
+3. **Cookies (single-identity fallback)**: makes requests look like one
+   specific logged-in browser session rather than an anonymous cloud IP.
+   Works, but it's one identity behind however many users hit your site, so
+   it degrades under real traffic the same way a single un-proxied server
+   IP would - use this only if you don't want to set up a proxy yet.
    1. Export your youtube.com cookies as a Netscape-format `cookies.txt` (e.g. the "Get cookies.txt" browser extension) while logged into a real YouTube account.
    2. Base64-encode the file: `base64 -w0 cookies.txt` (macOS: `base64 -i cookies.txt`).
    3. Set that string as the `YTDLP_COOKIES_B64` env var in Vercel.
 
-Neither is guaranteed to eliminate blocking entirely (and cookies expire) -
-treat these as mitigations, not a permanent fix. If errors persist, the
-app now shows the actual underlying yt-dlp error message rather than a
-guessed category, which is the fastest way to tell what's actually
-happening.
+None of these are guaranteed to eliminate blocking entirely - treat them as
+mitigations, not a permanent fix. If errors persist, the app shows the
+actual underlying yt-dlp error message rather than a guessed category,
+which is the fastest way to tell what's actually happening.
 
 ### Caching
 

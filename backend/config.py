@@ -76,5 +76,20 @@ WHISPER_MAX_DURATION_SECONDS = int(
 # See README for how to generate this.
 YTDLP_COOKIES_B64 = os.environ.get("YTDLP_COOKIES_B64", "")
 
+# Optional: Webshare rotating residential proxy credentials (from
+# https://dashboard.webshare.io/proxy/settings, after purchasing a
+# "Residential" package). This is the scalable fix for cloud-IP blocking -
+# unlike cookies (one identity) or the player-client trick (no identity),
+# requests rotate across a large residential IP pool, so no single IP or
+# account absorbs enough traffic to get flagged. Used by both the captions
+# path (youtube-transcript-api's own proxy support) and the yt-dlp paths.
+# See README for setup.
+WEBSHARE_PROXY_USERNAME = os.environ.get("WEBSHARE_PROXY_USERNAME", "")
+WEBSHARE_PROXY_PASSWORD = os.environ.get("WEBSHARE_PROXY_PASSWORD", "")
+# Optional comma-separated country codes (e.g. "US,CA") to restrict which
+# proxy locations are used - lower latency, or to work around geo limits.
+WEBSHARE_PROXY_LOCATIONS = os.environ.get("WEBSHARE_PROXY_LOCATIONS", "")
+PROXY_ENABLED = bool(WEBSHARE_PROXY_USERNAME and WEBSHARE_PROXY_PASSWORD)
+
 HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", 8000))
