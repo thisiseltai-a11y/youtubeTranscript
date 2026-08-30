@@ -63,9 +63,10 @@ def _download_audio(video_id: str, workdir: Path) -> Path:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
     except yt_dlp.utils.DownloadError as exc:
-        message = str(exc).lower()
+        raw_message = str(exc)
+        lowered = raw_message.lower()
         if any(
-            phrase in message
+            phrase in lowered
             for phrase in ("sign in to confirm", "not a bot", "confirm you're not a bot")
         ):
             raise YouTubeBlockedError(
@@ -73,11 +74,15 @@ def _download_audio(video_id: str, workdir: Path) -> Path:
                 "now - this is a cloud-IP rate limit, not a problem with the "
                 "video itself. See the README's YTDLP_COOKIES_B64 workaround."
             ) from exc
-        if "private" in message or "unavailable" in message or "removed" in message:
+        # "private"/"removed" are confident signals; bare "unavailable" is
+        # YouTube's generic wall (can also mean an unrecognized bot-check),
+        # so it falls through to the generic error with the real reason.
+        if "private" in lowered or "removed" in lowered:
             raise VideoUnavailableError(
-                "This video is private, deleted, or otherwise unavailable."
+                f"This video is private, deleted, or otherwise unavailable. "
+                f"(Details: {raw_message})"
             ) from exc
-        raise TranscriptionFailedError(f"Could not download audio: {exc}") from exc
+        raise TranscriptionFailedError(f"Could not download audio: {raw_message}") from exc
 
     audio_path = workdir / "audio.mp3"
     if not audio_path.exists():

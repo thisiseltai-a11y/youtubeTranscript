@@ -105,11 +105,15 @@ def get_video_metadata(video_id: str) -> VideoMetadata:
                 "video itself. See the README's YTDLP_COOKIES_B64 workaround."
             ) from exc
 
+        # Phrases yt-dlp uses when it has confidently identified a
+        # specific reason (private/deleted/terminated/age-gated) - NOT
+        # YouTube's generic "Video unavailable" wall, which can also
+        # appear behind an unrecognized bot-check or consent interstitial
+        # and would otherwise cause a false positive here.
         if any(
             phrase in lowered
             for phrase in (
                 "private video",
-                "video unavailable",
                 "has been removed",
                 "account associated with this video has been terminated",
                 "this video is not available",
@@ -118,9 +122,19 @@ def get_video_metadata(video_id: str) -> VideoMetadata:
             )
         ):
             raise VideoUnavailableError(
-                "This video is private, deleted, age-restricted, or otherwise unavailable."
+                "This video is private, deleted, age-restricted, or otherwise "
+                f"unavailable. (Details: {message})"
             ) from exc
-        raise VideoUnavailableError(f"Could not access this video: {message}") from exc
+
+        # Anything else - including the generic "Video unavailable" message -
+        # could genuinely be the video, or could be an unrecognized
+        # bot-check/consent wall. Surface the real reason instead of
+        # guessing which one it is.
+        raise VideoUnavailableError(
+            "Could not access this video. This may mean the video is "
+            "genuinely unavailable, or that YouTube is blocking requests "
+            f"from this server. (Details: {message})"
+        ) from exc
 
     if info is None:
         raise VideoUnavailableError("Could not access this video.")
