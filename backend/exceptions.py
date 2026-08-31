@@ -50,3 +50,9 @@ class TranscriptionFailedError(TranscriptAppError):
 
 class RewriteError(TranscriptAppError):
     status_code = 502
+
+
+class LotSaveError(TranscriptAppError):
+    """The Lot's shared state couldn't be written to storage."""
+
+    status_code = 502

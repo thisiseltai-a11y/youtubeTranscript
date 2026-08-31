@@ -7,9 +7,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import config, rewrite_service, transcript_service
+from . import config, lot_store, rewrite_service, transcript_service
 from .exceptions import TranscriptAppError
-from .schemas import RewriteRequest, RewriteResponse, TranscriptRequest, TranscriptResponse
+from .schemas import (
+    LotState,
+    RewriteRequest,
+    RewriteResponse,
+    TranscriptRequest,
+    TranscriptResponse,
+)
 
 app = FastAPI(title="YouTube Transcript + AI Rewrite")
 
@@ -44,6 +50,22 @@ def post_transcript(req: TranscriptRequest):
 def post_rewrite(req: RewriteRequest):
     rewritten = rewrite_service.rewrite_transcript(req)
     return RewriteResponse(rewritten_text=rewritten)
+
+
+# --- The Lot ---------------------------------------------------------------
+# One shared JSON blob (there's only one lot) so every device that opens
+# /the-lot sees the same list. No auth for v1, same as the rest of this app.
+
+
+@app.get("/api/lot", response_model=LotState)
+def get_lot():
+    return lot_store.get() or LotState()
+
+
+@app.put("/api/lot", response_model=LotState)
+def put_lot(state: LotState):
+    lot_store.set(state.model_dump())
+    return state
 
 
 # --- Serve the static frontend (local dev only) ---------------------------

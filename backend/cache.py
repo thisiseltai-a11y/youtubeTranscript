@@ -19,22 +19,11 @@ from typing import Optional
 
 import requests
 
-from . import config
+from . import config, kv
 
 logger = logging.getLogger(__name__)
 
 _KEY_PREFIX = "transcript:"
-
-
-def _kv_command(command: list) -> object:
-    resp = requests.post(
-        config.KV_REST_API_URL,
-        headers={"Authorization": f"Bearer {config.KV_REST_API_TOKEN}"},
-        json=command,
-        timeout=5,
-    )
-    resp.raise_for_status()
-    return resp.json().get("result")
 
 
 def _path(video_id: str):
@@ -44,7 +33,7 @@ def _path(video_id: str):
 def get(video_id: str) -> Optional[dict]:
     if config.KV_ENABLED:
         try:
-            raw = _kv_command(["GET", _KEY_PREFIX + video_id])
+            raw = kv.command(["GET", _KEY_PREFIX + video_id])
         except (requests.RequestException, ValueError) as exc:
             logger.warning("KV cache read failed, treating as a miss: %s", exc)
             return None
@@ -69,7 +58,7 @@ def set(video_id: str, data: dict) -> None:
 
     if config.KV_ENABLED:
         try:
-            _kv_command(["SET", _KEY_PREFIX + video_id, payload])
+            kv.command(["SET", _KEY_PREFIX + video_id, payload])
         except requests.RequestException as exc:
             logger.warning("KV cache write failed (continuing without caching): %s", exc)
         return

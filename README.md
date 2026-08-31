@@ -129,11 +129,25 @@ Integrations tab and the `KV_REST_API_URL`/`KV_REST_API_TOKEN` env vars
 are wired up automatically. Without that integration, the app still runs,
 just without durable caching (each cold start starts fresh).
 
+## The Lot
+
+A small standalone page at `/the-lot` (`public/the-lot.html`) for tracking
+inventory as a pixel-art town - one house per car, grouped by lot number and
+for-sale/sold status. Unrelated to the transcript tool; it just rides along
+on the same Vercel deployment. No auth (same as the rest of this app, v1) -
+anyone with the URL can view and edit it.
+
+State is a single shared JSON blob (`backend/lot_store.py`), using the same
+Upstash-Redis-or-local-file storage as the transcript cache, so every device
+that opens the page sees the same list. The page also caches the last-seen
+state in `localStorage` for an instant first paint and offline viewing.
+
 ## API
 
 - `POST /api/transcript` - `{ "url": "...", "force_refresh": false }` -> transcript, source (`manual_captions` / `auto_captions` / `whisper`), segments with timestamps, cache status.
 - `POST /api/rewrite` - `{ "transcript_text": "...", "preset": "shorten", "target_topic": null, "instructions": "" }` -> `{ "rewritten_text": "..." }`.
 - `GET /api/health` - reports whether the Whisper fallback and rewrite feature are configured.
+- `GET /api/lot` / `PUT /api/lot` - reads/replaces The Lot's shared `{ "cars": [{ "id", "lot", "status" }] }` state.
 
 ## Error handling
 

@@ -53,3 +53,13 @@ class RewriteRequest(BaseModel):
 class RewriteResponse(BaseModel):
     rewritten_text: str
     style_notes: Optional[str] = None
+
+
+class LotCar(BaseModel):
+    id: str
+    lot: str
+    status: Literal["for-sale", "sold"]
+
+
+class LotState(BaseModel):
+    cars: list[LotCar] = Field(default_factory=list)
