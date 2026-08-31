@@ -6,6 +6,6 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/the-lot", "destination": "/the-lot.html" }
+    { "source": "/transcript", "destination": "/transcript.html" }
   ]
 }

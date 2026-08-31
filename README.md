@@ -6,6 +6,10 @@ Claude while preserving the original speaker's tone and voice.
 Runs locally with `uvicorn`, and deploys to **Vercel** as a Python
 serverless function (`api/index.py`) + static frontend (`public/`).
 
+The deployed site has two pages sharing this project: the transcript tool
+described below lives at `/transcript`; `/` is **The Lot**, an unrelated
+car-inventory tracker - see [that section](#the-lot).
+
 ## How it works
 
 1. **Transcript extraction** (`backend/transcript_service.py`), prioritizing accuracy:
@@ -131,11 +135,11 @@ just without durable caching (each cold start starts fresh).
 
 ## The Lot
 
-A small standalone page at `/the-lot` (`public/the-lot.html`) for tracking
-inventory as a pixel-art town - one house per car, grouped by lot number and
-for-sale/sold status. Unrelated to the transcript tool; it just rides along
-on the same Vercel deployment. No auth (same as the rest of this app, v1) -
-anyone with the URL can view and edit it.
+The site's homepage (`/`, `public/index.html`) - a small standalone page for
+tracking inventory as a pixel-art town, one house per car, grouped by lot
+number and for-sale/sold status. Unrelated to the transcript tool above; it
+just rides along on the same Vercel deployment. No auth (same as the rest
+of this app, v1) - anyone with the URL can view and edit it.
 
 State is a single shared JSON blob (`backend/lot_store.py`), using the same
 Upstash-Redis-or-local-file storage as the transcript cache, so every device

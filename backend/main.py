@@ -54,7 +54,8 @@ def post_rewrite(req: RewriteRequest):
 
 # --- The Lot ---------------------------------------------------------------
 # One shared JSON blob (there's only one lot) so every device that opens
-# /the-lot sees the same list. No auth for v1, same as the rest of this app.
+# the site (public/index.html) sees the same list. No auth for v1, same
+# as the rest of this app.
 
 
 @app.get("/api/lot", response_model=LotState)
