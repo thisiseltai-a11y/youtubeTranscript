@@ -178,7 +178,7 @@
   .road-h{
     height:40px;
     margin-top:14px;
-    background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAT0lEQVR4nGM01VH9z8DAwCDIx82ADtasX8HAwMDAEBIYgSH3/tNXBgYGBgYmDBkSwcAbwIgvDPCBYRQGeA1Ys34FPC0MjAvoYsBoOmBgAAB1EhSzorW/OAAAAABJRU5ErkJggg==");
+    background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQ0lEQVR4nGPUVpb5z0ABYKJEMwMDAwMLJwcbRQZQ7IJhYAALjLFn3zaiNLg4eVHXBYwm2koDm5CGgQEs33/8GlgXAAAO8QkOcMdRUAAAAABJRU5ErkJggg==");
     background-repeat:repeat-x;
     background-position:left top;
     background-size:64px 64px;
@@ -260,7 +260,7 @@
   }
 
   .lot-tag{
-    margin-top:8px;
+    margin-bottom:6px;
     font-family:'Space Mono', monospace;
     font-size:0.72rem;
     font-weight:700;
@@ -483,12 +483,12 @@
     var forSale = car.status === "for-sale";
     var vehicleHtml = forSale ? '<img class="sprite sprite-car" src="' + IMG_CAR + '" alt="" />' : "";
     return '<button class="house-wrap" type="button" data-id="' + escapeHtml(car.id) + '" aria-label="Lot ' + lot + ', ' + (forSale ? "for sale" : "sold") + '">' +
+      '<div class="lot-tag mono">' + lot + '</div>' +
       '<img class="sprite sprite-house" src="' + IMG_HOUSE + '" alt="" />' +
       '<div class="lawn">' +
       '<img class="sprite sprite-bush" src="' + IMG_BUSH + '" alt="" />' +
       '<div class="driveway">' + vehicleHtml + '</div>' +
       '</div>' +
-      '<div class="lot-tag mono">' + lot + '</div>' +
       (forSale ? '' : '<div class="sold-tag">Sold</div>') +
       '</button>';
   }
