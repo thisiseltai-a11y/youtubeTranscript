@@ -243,8 +243,13 @@
     display:block;
   }
   .sprite-car{
-    width:32px;
-    height:20px;
+    width:28px;
+    height:24px;
+    /* This one sprite is a downscaled photo-style reference image, not a
+       hand-pixelled flat-color sprite like the rest of the scene - crisp
+       nearest-neighbor scaling (image-rendering:pixelated, set globally
+       on .sprite) would just show its blur blockily, so smooth it instead. */
+    image-rendering:auto;
     transition:opacity 0.25s ease, transform 0.25s ease;
   }
   .sprite-house{
@@ -475,7 +480,7 @@
   // image-rendering:pixelated rather than drawn with smooth CSS shapes,
   // to match the Pokemon-town look.
   var IMG_HOUSE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABJklEQVR4nGNkoAIQ5Of739raCOdXV9czvP/4iZGBgYGBRZCf7z81LMFmKQMDAwOjjJQETSyAASZaGk4XC1i+fv3GcPfGKbINKIn0wym3/vwLBhayTYYCBXE+PLJYLNCyjcSq9Nrh5Xgtmnb2L5ydZcwMZ1M9Du7P10ThU90CxcTrKHyK4wAGkIMFpwVbr7xn6J4+DavCrVfeM3jrCJJsMSOtigoYYGFgYGA4um8N2QbEpTfglLt7+wruOFjTVYXCDylrI8sBJEWyU3g5AwMDA8O+lZ1wsU+fPhFvgeK3BQz3uRJIsZOBjw93Tn79Ei0fYDO8NEeNJAvRAcEg6p5yC688SUFEDiApiGgBaF/h4JJ48BIzbJGTJ7GAkYEB0QKgNnj/8RMjANgoTJTKzrJaAAAAAElFTkSuQmCC";
-  var IMG_CAR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAYAAAD+pA/bAAAA7ElEQVR4nNVTO24CMRB9RkagkSvSROmQuADdinPkLDTbxg0Hi7bLEdJFNLiyRgmxMA3eNYu9u+JT8CRLM6P38UcGnh0iboiUBwBmm5x3gdmKlL4u2iaxwB1Ow1WZDZCVhtltAQCzl9c6RMakmECkvCtK4FM3hLhuwWXCZWroivxOh4JIeWYrZGjuYRoQvKjSXgbz2du8JsS16bj3HILeFGVzRebnG6n6GsT60U1OAyCIlN8v3h8XADSPrL42FwS7XPea5HSy0ucfbToZXxB///57A3I6ZiuSb/Chzz8UsxW51aUDMOwEbaMYfboj1lZ8u2zI6J4AAAAASUVORK5CYII=";
+  var IMG_CAR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAYCAYAAADpnJ2CAAAFU0lEQVR4nO2UXWxcRxmGn2/O2f9d765/dtdee93mBwc7bVOo2oqquFUaalRBQAKDBFIQkaBUpeICccGNYyQkJC4qJARUKBIECVBKaZU2RYKqyBUVqUoSMHUTklDq1Hbi3/Wuz65395yZ4cIumDhKgOu+FzOa+UbzzLzzzQfv6T39j5KbxG4Uv57M/wsUEWXBApvdTXcRrDGCyA1XXw8oGxRcoAAxiAHEYH0dWN9ctjm/zruNAeZucrRtQIExgfFc7u7PPNeVid9WqyzZRqMl1hpcR+G4Lq1WQBD4WAvGWGIR16S6+p2Z6emffP3i7x4fHxuD8fHr2qu2DkZGvhoW+ZbpGHjgiWKKexb/fDKyu62VGOzU8YGsH8/JUtx767W4ufqX+I5kPT7UpeN3lcLxYqSaXH3jxeitpe6vjKeHho8PDcng4GD4v7WU9x/44t+vnH6+v9jTbQ4e/ITy1ir09ZVIJJOUy2WUErLZdubn56mslmn6hqM//kHQu/vOUEU6n1mcfGH0hpZai4gQ+ezop7557p1yd1MlvnDh1ROqLZ1mtVIBoNjbR3+phOsorLX42nD+3DlWV8u4roujxMaiEdV920NXepPN47FI9OyJE88eGxsbU+Nb7HU3oBaQqG6uH2rL3VKanZ3zM8UBkqk0H/nkXTx66NOEXVdeev2CPfKjCUJRzVPfOMjgrj4Wl1Y4+tNf8PrZSWn6xta12xVPt33NVGd/BhwbGhr6DxddwMqRIwrwnr0Y+qvkdxYl1o0zcD/1IKD3jr3cfseddGTT1EN5Ub+etR3pEAf275feQru9Or8gz50p26tzO4iEXFb8JrNXnUBffnsZYHT06W1J4zA+btxk53077v7oI6F0wTrhuKNCERqeTzKZItuWFIB6vW5xXVqBoVZfB5BCvgPPj6B9F9wIIq5KFN7ndu2+5zGghDyjtyany/CYMDFOkN3zyLpvba4xaZary0opl4T2uTwV4+lfrSAi9rWpGWLV84gLJ0++aE93JEVE8Ob+RqT1FqGqQlp1yXiN1orKhEjvOkDl0lEYVjCx+Y7Dwy5A6pZ7v9/34cM2n403n/zud/Txnx/TO/uLuquzQ7elMzqZSutCvqA/NvKQfnj/AzqTyepUKq3b0lndnk3r++79oJ54+bf68KHP6e5Cvtn5oS/ZRNfOxzch7lZLN66qW6ax3qQWOPT072JgaB9ey7JaXcNoTeA3MdaQyRWlI19EBALtY03ASrlCJJ5hz9595Hv6WakFGL9JyK9t+/wCw67IK4FN9H7vwZGPP5GL1luNet1NJhOseD7haAytDShHmvW6DQIfK0rCjthoLAaiQES8atWWChkWFxYp9PQGp84vhKf++JvHVGv1h8ZaFwg2s3QCEEK1d6QyM8Xe+x/EcRQS1OnOtQDB932i0ZgtlW4XpRRYaDabMn152rqOu1Hee1L4Kk5Hvo9Go0Vt7mVcv2z1NbXF3fj4lrZsWi5evMSZ876Q3wPG11z5B4c/v49Tb85RbVi+/egOzl16W7CQ68zaJ395htH9u1msNPj9Hxah+1ah6SmWLkg2tEA8npSq520HAgRG6WzSGipTmpUZSaUzIenSnD71Kn7LkI1F+dPZSVp+AMDiwjylZJk3J09jLBSzAUFtmrVKOYi5gY5HIs5STV/7hP8G+n4z7NWUchTRoL5As7V8LJ5IpGZmfHEdZSvGyFNvnH23LIEI7akE82VQohzXsV59zWt3xBkxEnbrjSbGGOd6QAsQBMELa97aXlBaKda8mvfl5YrX2HbELZprXBsOfSAclWijVdOCMtaaVzYD/8rWfwIbEk91FNhnegAAAABJRU5ErkJggg==";
   var IMG_BUSH = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAYAAADA+m62AAAAaklEQVR4nGNgIBIwMjAwMKjIiP7Hp+jOk9eMjDBFSuGWWBXdW3mcgYGBgYEJnyJkOUbdcHO4tZuNUxl8z87GqoHp+9F7cA6yos3GqXD296P3GOBu5LRWwmoSzCCmO09eMyILYFN058lrRgDkayWRyijIEgAAAABJRU5ErkJggg==";
 
   function renderHouse(car){
