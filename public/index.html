@@ -209,6 +209,24 @@
     background-repeat:no-repeat;
     background-size:100% 100%;
     image-rendering:auto;
+    /* Harmless outside a flex parent - only takes effect inside
+       .road-row, where it lets the road stretch to fill the width
+       left over after the HQ. */
+    flex:1 1 auto;
+  }
+
+  /* Block 0 only: the HQ sits beside its road instead of above it -
+     see renderRoadRow. Owns the vertical spacing that .road-h normally
+     provides itself, since here it's shared between two children of
+     different heights instead of one that spans the full row. */
+  .road-row{
+    display:flex;
+    align-items:flex-end;
+    gap:16px;
+    margin:14px 0;
+  }
+  .road-row .road-h{
+    margin:0;
   }
 
   .house-wrap{
@@ -647,44 +665,26 @@
       '</button>';
   }
 
-  // Block 0's near side shares its row with the HQ building (see
-  // renderBlock), so it holds one fewer house than a normal segment -
-  // otherwise the row would run wider than the page and get its own
-  // hidden horizontal scrollbar, which would also throw its columns out
-  // of sync with the far row under it (that one doesn't scroll with it).
-  function blockCapacity(blockIndex){
-    return blockIndex === 0 ? BLOCK_SIZE - 1 : BLOCK_SIZE;
-  }
-
   // Groups for-sale cars, in the order they were added, into street
-  // segments: a segment's near side fills first, then its far side up to
-  // the same count (paired under the same columns as the near side, so
-  // house 4 sits across from house 1), then the next segment's near side
-  // starts, and so on. Walked sequentially (not by arithmetic on i)
-  // because segment capacity isn't uniform - block 0 is smaller.
+  // segments: the first BLOCK_SIZE cars fill a segment's near side, the
+  // next BLOCK_SIZE fill its far side (paired under the same columns as
+  // the near side, so house 4 sits across from house 1), then the next
+  // BLOCK_SIZE start a new segment's near side, and so on. The HQ sits
+  // beside the road rather than in a houses row (see renderRoadRow), so
+  // it doesn't affect how many houses fit per side.
   function assignBlocks(cars){
+    var perBlock = BLOCK_SIZE * 2;
     var blocks = [];
-    var blockIndex = 0;
-    var cap = blockCapacity(0);
-    var near = [], far = [];
-    var fillingFar = false;
     for (var i = 0; i < cars.length; i++) {
-      if (!fillingFar) {
-        near.push(cars[i]);
-        if (near.length >= cap) fillingFar = true;
+      var blockIndex = Math.floor(i / perBlock);
+      var posInBlock = i % perBlock;
+      if (!blocks[blockIndex]) blocks[blockIndex] = { near: [], far: [] };
+      if (posInBlock < BLOCK_SIZE) {
+        blocks[blockIndex].near[posInBlock] = cars[i];
       } else {
-        far.push(cars[i]);
-        if (far.length >= cap) {
-          blocks.push({ near: near, far: far });
-          blockIndex++;
-          cap = blockCapacity(blockIndex);
-          near = [];
-          far = [];
-          fillingFar = false;
-        }
+        blocks[blockIndex].far[posInBlock - BLOCK_SIZE] = cars[i];
       }
     }
-    if (near.length > 0 || far.length > 0) blocks.push({ near: near, far: far });
     return blocks;
   }
 
@@ -692,8 +692,8 @@
   // far side is usually shorter than the near side within a block (it
   // fills in after), and still needs empty slots out to the same column
   // count so its houses land under their near-side counterparts.
-  function renderRow(houses, cols, mirrored, leadingHtml){
-    var html = leadingHtml || "";
+  function renderRow(houses, cols, mirrored){
+    var html = "";
     for (var c = 0; c < cols; c++) {
       html += houses[c] ? renderHouse(houses[c], mirrored) : '<div class="house-slot-empty"></div>';
     }
@@ -710,10 +710,17 @@
       '</div>';
   }
 
+  // Block 0's road sits beside the HQ (not under a row that includes
+  // it) - a flex row with the HQ on the left and the road stretching to
+  // fill the rest of the width. Every other block's road is just itself.
+  function renderRoadRow(withHq){
+    if (!withHq) return '<div class="road-h"></div>';
+    return '<div class="road-row">' + renderHqWrap() + '<div class="road-h"></div></div>';
+  }
+
   function renderBlock(block, blockIndex){
     var cols = Math.max(block.near.length, block.far.length);
-    var nearLeading = blockIndex === 0 ? renderHqWrap() : "";
-    var html = renderRow(block.near, cols, false, nearLeading) + '<div class="road-h"></div>';
+    var html = renderRow(block.near, cols, false) + renderRoadRow(blockIndex === 0);
     if (block.far.length > 0) {
       html += renderRow(block.far, cols, true);
     }
