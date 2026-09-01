@@ -93,6 +93,10 @@
     gap:10px;
     align-items:center;
   }
+  .header-actions{
+    display:flex;
+    gap:10px;
+  }
   .stat{
     display:flex;
     flex-direction:column;
@@ -151,9 +155,9 @@
   /* ---------- street ---------- */
   main{
     position:relative;
-    max-width:900px;
+    max-width:1100px;
     margin:0 auto;
-    padding:48px 24px 120px;
+    padding:48px 16px 120px;
   }
   .empty-state{
     text-align:center;
@@ -171,13 +175,31 @@
     display:flex;
     align-items:flex-start;
     gap:16px;
-    padding:0 20px;
     overflow-x:auto;
     overflow-y:hidden;
   }
+  /* Each street segment: a near-side row, then the road, then (once
+     there are enough cars to need it) a far-side row of houses mirrored
+     to face back across it. Segments stack vertically - once one fills
+     up (see BLOCK_SIZE), a new one starts below rather than growing the
+     same row wider forever. */
+  .block{
+    margin-bottom:48px;
+  }
+  .block:last-child{
+    margin-bottom:0;
+  }
+  /* Keeps a far-row column's position aligned under its near-row
+     counterpart when that column's far side isn't filled yet - same
+     width as .lawn, since that's what actually sets a house-wrap's
+     width via align-items:center. */
+  .house-slot-empty{
+    width:240px;
+    flex:0 0 auto;
+  }
   .road-h{
     height:56px;
-    margin-top:14px;
+    margin:14px 0;
     /* A real (non-tileable) photo-style road crop stretched to fill -
        tiling it (like the old hand-pixel version did) would show its
        own dash spacing as uneven at the repeat seam, since the source
@@ -285,6 +307,35 @@
     letter-spacing:0.08em;
     color:var(--sold-tag);
     font-weight:700;
+  }
+
+  /* ---------- garage ---------- */
+  .garage-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .garage-bay{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    width:150px;
+    padding:18px 10px 14px;
+    border-radius:12px;
+    border:1.5px solid var(--paper-edge);
+    background:
+      linear-gradient(180deg, rgba(36,28,21,0.08) 0%, rgba(36,28,21,0) 45%),
+      repeating-linear-gradient(90deg, #d9d3c5 0 3px, #c9c2b2 3px 6px, #d9d3c5 6px 75px);
+    cursor:pointer;
+    font-family:inherit;
+    transition:transform 0.15s ease;
+  }
+  .garage-bay:hover{transform:translateY(-3px);}
+  .garage-bay:focus-visible{outline:3px solid var(--gold-dark); outline-offset:3px;}
+  .garage-car{
+    width:76px;
+    height:64px;
   }
 
   /* ---------- panel ---------- */
@@ -396,6 +447,7 @@
     .driveway{width:51px; height:59px;}
     .sprite-house{width:121px; height:121px;}
     .sprite-car{width:47px; height:41px;}
+    .house-slot-empty{width:184px;}
     header{padding:14px 16px;}
     .brand h1{font-size:1.3rem;}
   }
@@ -413,7 +465,10 @@
     <span class="tag">exotic car inventory</span>
   </div>
   <div class="stats" id="stats"></div>
-  <button class="btn-primary" id="add-btn" type="button">+ Add a car</button>
+  <div class="header-actions">
+    <button class="btn-ghost" id="garage-btn" type="button">Garage</button>
+    <button class="btn-primary" id="add-btn" type="button">+ Add a car</button>
+  </div>
 </header>
 
 <main>
@@ -492,34 +547,122 @@
   // its <option> - see populateMakeOptions) instead of restructuring.
   var DEFAULT_MAKE = "camaro-ss";
   var CAR_SPRITES = {
-    "camaro-ss": { label: "Classic Camaro SS", img: "data:image/png;base64,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" }
+    "camaro-ss": { label: "Classic Camaro SS", img: "data:image/png;base64,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", rearImg: "data:image/png;base64,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"  }
   };
   var IMG_BUSH = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAYAAADA+m62AAAAaklEQVR4nGNgIBIwMjAwMKjIiP7Hp+jOk9eMjDBFSuGWWBXdW3mcgYGBgYEJnyJkOUbdcHO4tZuNUxl8z87GqoHp+9F7cA6yos3GqXD296P3GOBu5LRWwmoSzCCmO09eMyILYFN058lrRgDkayWRyijIEgAAAABJRU5ErkJggg==";
 
-  function renderHouse(car){
+  // Only for-sale cars get a house - once a car is marked sold it moves
+  // to the garage (see renderGarageView) instead of sitting in its old
+  // driveway. Nothing here is separately saved: both views are just
+  // different ways of rendering the same state.cars list filtered by
+  // status, so which car is on the street vs. in the garage always
+  // matches what was last saved, same as everything else.
+  var currentView = "street"; // "street" | "garage"
+
+  // Houses per side before a street segment is full and a new one
+  // starts below it (see assignBlocks) - chosen to comfortably fit
+  // main's width without needing horizontal scroll on a normal screen.
+  var BLOCK_SIZE = 4;
+
+  function renderHouse(car, mirrored){
     var lot = escapeHtml(car.lot || "—");
-    var forSale = car.status === "for-sale";
     var carSprite = CAR_SPRITES[car.make] || CAR_SPRITES[DEFAULT_MAKE];
-    var vehicleHtml = forSale ? '<img class="sprite sprite-car" src="' + carSprite.img + '" alt="' + escapeHtml(carSprite.label) + '" />' : "";
-    return '<button class="house-wrap" type="button" data-id="' + escapeHtml(car.id) + '" aria-label="Lot ' + lot + ', ' + (forSale ? "for sale" : "sold") + '">' +
-      '<div class="lot-tag mono">' + lot + '</div>' +
-      '<img class="sprite sprite-house" src="' + IMG_HOUSE + '" alt="" />' +
-      '<div class="lawn">' +
+    // Far-side houses face back across the road toward the near side,
+    // so from our fixed viewpoint their cars show from behind.
+    var img = mirrored ? carSprite.rearImg : carSprite.img;
+    var vehicleHtml = '<img class="sprite sprite-car" src="' + img + '" alt="' + escapeHtml(carSprite.label) + '" />';
+    var tagHtml = '<div class="lot-tag mono">' + lot + '</div>';
+    var houseHtml = '<img class="sprite sprite-house" src="' + IMG_HOUSE + '" alt="" />';
+    var lawnHtml = '<div class="lawn">' +
       '<img class="sprite sprite-bush" src="' + IMG_BUSH + '" alt="" />' +
       '<div class="driveway">' + vehicleHtml + '</div>' +
-      '</div>' +
-      (forSale ? '' : '<div class="sold-tag">Sold</div>') +
+      '</div>';
+    // Near side reads top-to-bottom as tag, house, driveway (driveway
+    // closest to the road below it). Far side is the mirror of that -
+    // driveway closest to the road above it, house, then the tag - so
+    // both sides' driveways sit right against the shared road.
+    var inner = mirrored ? (lawnHtml + houseHtml + tagHtml) : (tagHtml + houseHtml + lawnHtml);
+    return '<button class="house-wrap" type="button" data-id="' + escapeHtml(car.id) + '" aria-label="Lot ' + lot + ', for sale">' +
+      inner +
       '</button>';
+  }
+
+  // Groups for-sale cars, in the order they were added, into street
+  // segments: the first BLOCK_SIZE cars fill a segment's near side, the
+  // next BLOCK_SIZE fill its far side (paired under the same columns as
+  // the near side, so house 4 sits across from house 1), then the next
+  // BLOCK_SIZE start a new segment's near side, and so on.
+  function assignBlocks(cars){
+    var perBlock = BLOCK_SIZE * 2;
+    var blocks = [];
+    for (var i = 0; i < cars.length; i++) {
+      var blockIndex = Math.floor(i / perBlock);
+      var posInBlock = i % perBlock;
+      if (!blocks[blockIndex]) blocks[blockIndex] = { near: [], far: [] };
+      if (posInBlock < BLOCK_SIZE) {
+        blocks[blockIndex].near[posInBlock] = cars[i];
+      } else {
+        blocks[blockIndex].far[posInBlock - BLOCK_SIZE] = cars[i];
+      }
+    }
+    return blocks;
+  }
+
+  // cols is passed explicitly rather than read off houses.length - the
+  // far side is usually shorter than the near side within a block (it
+  // fills in after), and still needs empty slots out to the same column
+  // count so its houses land under their near-side counterparts.
+  function renderRow(houses, cols, mirrored){
+    var html = "";
+    for (var c = 0; c < cols; c++) {
+      html += houses[c] ? renderHouse(houses[c], mirrored) : '<div class="house-slot-empty"></div>';
+    }
+    return '<div class="houses-row">' + html + '</div>';
+  }
+
+  function renderBlock(block){
+    var cols = Math.max(block.near.length, block.far.length);
+    var html = renderRow(block.near, cols, false) + '<div class="road-h"></div>';
+    if (block.far.length > 0) {
+      html += renderRow(block.far, cols, true);
+    }
+    return '<div class="block">' + html + '</div>';
+  }
+
+  function renderStreetView(forSaleCars){
+    if (forSaleCars.length === 0) {
+      return '<div class="empty-state"><h2 class="display">The street is empty</h2><p>Add your first car to start building the lot.</p></div>';
+    }
+    var blocks = assignBlocks(forSaleCars);
+    var html = "";
+    for (var b = 0; b < blocks.length; b++) html += renderBlock(blocks[b]);
+    return '<div class="street">' + html + '</div>';
+  }
+
+  function renderGarageBay(car){
+    var lot = escapeHtml(car.lot || "—");
+    var carSprite = CAR_SPRITES[car.make] || CAR_SPRITES[DEFAULT_MAKE];
+    return '<button class="garage-bay" type="button" data-id="' + escapeHtml(car.id) + '" aria-label="Lot ' + lot + ', sold">' +
+      '<img class="sprite garage-car" src="' + carSprite.img + '" alt="' + escapeHtml(carSprite.label) + '" />' +
+      '<div class="lot-tag mono">' + lot + '</div>' +
+      '</button>';
+  }
+
+  function renderGarageView(soldCars){
+    if (soldCars.length === 0) {
+      return '<div class="empty-state"><h2 class="display">The garage is empty</h2><p>Cars marked sold show up here.</p></div>';
+    }
+    var cards = "";
+    for (var i = 0; i < soldCars.length; i++) cards += renderGarageBay(soldCars[i]);
+    return '<div class="garage"><div class="garage-grid">' + cards + '</div></div>';
   }
 
   function renderApp(){
     var cars = state.cars || [];
-    if (cars.length === 0) {
-      return '<div class="empty-state"><h2 class="display">The street is empty</h2><p>Add your first car to start building the lot.</p></div>';
+    if (currentView === "garage") {
+      return renderGarageView(cars.filter(function(c){ return c.status === "sold"; }));
     }
-    var houses = "";
-    for (var i = 0; i < cars.length; i++) houses += renderHouse(cars[i]);
-    return '<div class="street"><div class="houses-row">' + houses + '</div><div class="road-h"></div></div>';
+    return renderStreetView(cars.filter(function(c){ return c.status === "for-sale"; }));
   }
 
   function renderStats(){
@@ -533,9 +676,16 @@
       '<div class="stat"><b class="mono">' + cars.length + '</b><small>Total</small></div>';
   }
 
+  function updateGarageButton(){
+    var soldCount = (state.cars || []).filter(function(c){ return c.status === "sold"; }).length;
+    var btn = document.getElementById("garage-btn");
+    btn.textContent = currentView === "garage" ? "← Back to street" : "Garage (" + soldCount + ")";
+  }
+
   function render(){
     document.getElementById("app").innerHTML = renderApp();
     document.getElementById("stats").innerHTML = renderStats();
+    updateGarageButton();
   }
 
   function updateStatusButtons(){
@@ -604,7 +754,7 @@
   }
 
   document.getElementById("app").addEventListener("click", function(e){
-    var btn = e.target.closest(".house-wrap");
+    var btn = e.target.closest(".house-wrap, .garage-bay");
     if (!btn) return;
     var id = btn.getAttribute("data-id");
     var car = null;
@@ -613,6 +763,11 @@
   });
 
   document.getElementById("add-btn").addEventListener("click", function(){ openPanel("add", null); });
+
+  document.getElementById("garage-btn").addEventListener("click", function(){
+    currentView = currentView === "garage" ? "street" : "garage";
+    render();
+  });
 
   var statusBtns = document.querySelectorAll(".status-btn");
   for (var s = 0; s < statusBtns.length; s++) {

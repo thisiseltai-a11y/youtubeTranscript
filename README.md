@@ -136,10 +136,17 @@ just without durable caching (each cold start starts fresh).
 ## The Lot
 
 The site's homepage (`/`, `public/index.html`) - a small standalone page for
-tracking inventory as a pixel-art town, one house per car, grouped by lot
-number and for-sale/sold status. Unrelated to the transcript tool above; it
-just rides along on the same Vercel deployment. No auth (same as the rest
-of this app, v1) - anyone with the URL can view and edit it.
+tracking inventory as a pixel-art town, one house per for-sale car, grouped
+by lot number and make. Unrelated to the transcript tool above; it just
+rides along on the same Vercel deployment. No auth (same as the rest of
+this app, v1) - anyone with the URL can view and edit it.
+
+For-sale cars fill a street: the near side first (up to `BLOCK_SIZE` per
+side, in `public/index.html`), then the far side paired under the same
+columns and mirrored to face back across the road, then a new street
+segment starts below once both sides of one are full. Sold cars move to a
+separate Garage view (toggled from the header) instead of sitting on the
+street.
 
 State is a single shared JSON blob (`backend/lot_store.py`), using the same
 Upstash-Redis-or-local-file storage as the transcript cache, so every device
