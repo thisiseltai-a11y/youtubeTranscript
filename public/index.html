@@ -231,7 +231,6 @@
     flex-direction:column;
     align-items:center;
     flex:0 0 auto;
-    margin-right:8px;
   }
   .hq-tag{
     white-space:nowrap;
@@ -277,11 +276,6 @@
     justify-content:center;
     padding-bottom:2px;
   }
-  .hq-plaza{
-    width:260px;
-    height:70px;
-  }
-
   .sprite{
     image-rendering:pixelated;
     image-rendering:-moz-crisp-edges;
@@ -491,7 +485,6 @@
     .sprite-car{width:47px; height:41px;}
     .house-slot-empty{width:184px;}
     .sprite-hq{width:180px; height:105px;}
-    .hq-plaza{width:180px; height:59px;}
     header{padding:14px 16px;}
     .brand h1{font-size:1.3rem;}
   }
@@ -699,29 +692,29 @@
   // far side is usually shorter than the near side within a block (it
   // fills in after), and still needs empty slots out to the same column
   // count so its houses land under their near-side counterparts.
-  function renderRow(houses, cols, mirrored, leadingHtml){
-    var html = leadingHtml || "";
+  function renderRow(houses, cols, mirrored, trailingHtml){
+    var html = "";
     for (var c = 0; c < cols; c++) {
       html += houses[c] ? renderHouse(houses[c], mirrored) : '<div class="house-slot-empty"></div>';
     }
+    html += trailingHtml || "";
     return '<div class="houses-row">' + html + '</div>';
   }
 
   // The dealership's own building - a fixed landmark, not tied to any
-  // car, so it's just prepended to the first street's near side (see
-  // renderBlock) rather than living in state.cars.
+  // car, so it's just appended to the right end of the first street's
+  // near side (see renderBlock) rather than living in state.cars.
   function renderHqWrap(){
     return '<div class="hq-wrap">' +
       '<div class="lot-tag mono hq-tag">Exotic Car Trader HQ</div>' +
       '<img class="sprite sprite-hq" src="' + IMG_HQ + '" alt="Exotic Car Trader headquarters" />' +
-      '<div class="driveway hq-plaza"></div>' +
       '</div>';
   }
 
   function renderBlock(block, blockIndex){
     var cols = Math.max(block.near.length, block.far.length);
-    var nearLeading = blockIndex === 0 ? renderHqWrap() : "";
-    var html = renderRow(block.near, cols, false, nearLeading) + '<div class="road-h"></div>';
+    var nearTrailing = blockIndex === 0 ? renderHqWrap() : "";
+    var html = renderRow(block.near, cols, false, nearTrailing) + '<div class="road-h"></div>';
     if (block.far.length > 0) {
       html += renderRow(block.far, cols, true);
     }
