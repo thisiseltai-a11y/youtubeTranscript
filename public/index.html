@@ -45,6 +45,13 @@
     font-family:'Karla', ui-sans-serif, system-ui, sans-serif;
     color:var(--ink);
   }
+  /* Garage view: indoors, so no grass - swaps the whole page over to a
+     concrete floor while that view is active (toggled in JS, see
+     updateGarageButton). */
+  body.garage-active{
+    background-color:#6e6e74;
+    background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZ0lEQVR4nGNMSsr4z0ABYOHh4SGoiI+Pj+HTp09Y5ZiIsQWXZhQD+Pj4iDELtwH4bCHKAHIBXgNweQtZHK8BuLyFLE4bL5ASI1gNICVGaBsL6ACb15hwSWAD2LzGhEuCWNeQHQYwSwHcix1HuGb+oQAAAABJRU5ErkJggg==");
+  }
   h1,h2,h3,.display{
     font-family:'Baloo 2', ui-rounded, system-ui, sans-serif;
   }
@@ -359,11 +366,15 @@
     gap:8px;
     width:150px;
     padding:18px 10px 14px;
-    border-radius:12px;
-    border:1.5px solid var(--paper-edge);
+    border-radius:4px;
+    /* Painted parking-stall lines on a darker patch of floor, rather
+       than the pavement-card look this used before the floor itself
+       went from grass to concrete. */
+    border-left:3px solid #ebe6d8;
+    border-right:3px solid #ebe6d8;
     background:
-      linear-gradient(180deg, rgba(36,28,21,0.08) 0%, rgba(36,28,21,0) 45%),
-      repeating-linear-gradient(90deg, #d9d3c5 0 3px, #c9c2b2 3px 6px, #d9d3c5 6px 75px);
+      linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0) 50%),
+      #55555c;
     cursor:pointer;
     font-family:inherit;
     transition:transform 0.15s ease;
@@ -806,6 +817,7 @@
     var soldCount = (state.cars || []).filter(function(c){ return c.status === "sold"; }).length;
     var btn = document.getElementById("garage-btn");
     btn.textContent = currentView === "garage" ? "← Back to street" : "Garage (" + soldCount + ")";
+    document.body.classList.toggle("garage-active", currentView === "garage");
   }
 
   function render(){
