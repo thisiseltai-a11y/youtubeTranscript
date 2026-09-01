@@ -692,17 +692,16 @@
   // far side is usually shorter than the near side within a block (it
   // fills in after), and still needs empty slots out to the same column
   // count so its houses land under their near-side counterparts.
-  function renderRow(houses, cols, mirrored, trailingHtml){
-    var html = "";
+  function renderRow(houses, cols, mirrored, leadingHtml){
+    var html = leadingHtml || "";
     for (var c = 0; c < cols; c++) {
       html += houses[c] ? renderHouse(houses[c], mirrored) : '<div class="house-slot-empty"></div>';
     }
-    html += trailingHtml || "";
     return '<div class="houses-row">' + html + '</div>';
   }
 
   // The dealership's own building - a fixed landmark, not tied to any
-  // car, so it's just appended to the right end of the first street's
+  // car, so it's just prepended to the left end of the first street's
   // near side (see renderBlock) rather than living in state.cars.
   function renderHqWrap(){
     return '<div class="hq-wrap">' +
@@ -713,8 +712,8 @@
 
   function renderBlock(block, blockIndex){
     var cols = Math.max(block.near.length, block.far.length);
-    var nearTrailing = blockIndex === 0 ? renderHqWrap() : "";
-    var html = renderRow(block.near, cols, false, nearTrailing) + '<div class="road-h"></div>';
+    var nearLeading = blockIndex === 0 ? renderHqWrap() : "";
+    var html = renderRow(block.near, cols, false, nearLeading) + '<div class="road-h"></div>';
     if (block.far.length > 0) {
       html += renderRow(block.far, cols, true);
     }
