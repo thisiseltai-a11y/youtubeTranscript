@@ -170,7 +170,7 @@
   .houses-row{
     display:flex;
     align-items:flex-start;
-    gap:10px;
+    gap:16px;
     padding:0 20px;
     overflow-x:auto;
     overflow-y:hidden;
@@ -204,8 +204,8 @@
 
   .lawn{
     position:relative;
-    width:170px;
-    height:84px;
+    width:240px;
+    height:120px;
     background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAgUlEQVR4nGPM6/H7z0ABYMIl8fHdN6xiMEzQAH4hLgxD+IW4GPiFuLC7AKZYSIgPRQMygMkhi7Oga3r37hNWF2HzEtwAXJrQbcYGUMIAl0J8FjAha7x/5wVel+A0AGYDeqARbQAlYJAYgC+aiDLg3btPOBMKIQvgXsAXAwTTASUAACBdL0ftzYr+AAAAAElFTkSuQmCC");
     background-repeat:repeat;
     background-size:32px 32px;
@@ -220,8 +220,8 @@
   }
 
   .driveway{
-    width:44px;
-    height:49px;
+    width:62px;
+    height:70px;
     background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAa0lEQVR4nGPsaSr4z0ABYGFgYGCQkZEh2wAmYhUKCAoRNgCXIgYGBoYP798RNgCXInyWEO0FXJaQbAA6wGkAvvAgygB84YFsOFleQDacemFArJ9xGkBMGsBrAD6Az3VYDUDXgM91WA0gxTsAOEka873CO8kAAAAASUVORK5CYII=");
     background-repeat:repeat;
     background-size:32px 32px;
@@ -243,8 +243,8 @@
     display:block;
   }
   .sprite-car{
-    width:42px;
-    height:35px;
+    width:58px;
+    height:49px;
     /* This one sprite is a downscaled photo-style reference image, not a
        hand-pixelled flat-color sprite like the rest of the scene - crisp
        nearest-neighbor scaling (image-rendering:pixelated, set globally
@@ -253,15 +253,15 @@
     transition:opacity 0.25s ease, transform 0.25s ease;
   }
   .sprite-house{
-    width:104px;
-    height:104px;
+    width:150px;
+    height:150px;
   }
   .sprite-bush{
-    width:26px;
-    height:21px;
+    width:36px;
+    height:29px;
     position:absolute;
-    top:5px;
-    left:5px;
+    top:7px;
+    left:7px;
   }
 
   .lot-tag{
@@ -390,10 +390,10 @@
   }
 
   @media (max-width:560px){
-    .lawn{width:130px; height:74px;}
-    .driveway{width:36px; height:41px;}
-    .sprite-house{width:84px; height:84px;}
-    .sprite-car{width:34px; height:29px;}
+    .lawn{width:184px; height:106px;}
+    .driveway{width:51px; height:59px;}
+    .sprite-house{width:121px; height:121px;}
+    .sprite-car{width:47px; height:41px;}
     header{padding:14px 16px;}
     .brand h1{font-size:1.3rem;}
   }
