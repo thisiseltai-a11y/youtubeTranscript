@@ -1,4 +1,3 @@
-import { BetEvaluator } from "@/components/BetEvaluator";
 import { FixturesSection } from "@/components/FixturesSection";
 import { Header } from "@/components/Header";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -25,13 +24,14 @@ export default async function Home() {
           </h1>
           <p className="mt-4 max-w-2xl text-neutral-600 dark:text-neutral-300">
             Team ratings, match probabilities, and expected goals from a Dixon-Coles Poisson
-            model — plus a bet evaluator to compare it against odds you find elsewhere. This is
-            analysis, not a sportsbook: it doesn&apos;t take bets or handle money.
+            model — with the reasoning behind every number, and an optional check against odds
+            you find elsewhere. This is analysis, not a sportsbook: it doesn&apos;t take bets or
+            handle money.
           </p>
         </section>
 
         <HowItWorks summary={summary} />
-        <FixturesSection fixtures={fixtures} />
+        <FixturesSection fixtures={fixtures} ratings={ratings} />
 
         <section id="ratings" className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
           <h2 className="text-xl font-semibold">Team ratings</h2>
@@ -42,8 +42,6 @@ export default async function Home() {
             <RatingsTable ratings={ratings} />
           </div>
         </section>
-
-        <BetEvaluator fixtures={fixtures} />
       </main>
 
       <footer className="border-t border-black/10 py-8 text-center text-xs text-neutral-500 dark:border-white/10">

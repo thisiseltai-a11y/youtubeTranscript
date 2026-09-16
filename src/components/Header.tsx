@@ -1,8 +1,7 @@
 const NAV_LINKS = [
   { href: "#how-it-works", label: "How it works" },
-  { href: "#fixtures", label: "Fixtures" },
+  { href: "#fixtures", label: "Matches" },
   { href: "#ratings", label: "Ratings" },
-  { href: "#evaluator", label: "Bet evaluator" },
 ];
 
 export function Header() {
