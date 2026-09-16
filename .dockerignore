@@ -2,6 +2,6 @@
 **/__pycache__
 **/*.pyc
 model/backtest_results.csv
-frontend/node_modules
-frontend/.next
+node_modules
+.next
 .git

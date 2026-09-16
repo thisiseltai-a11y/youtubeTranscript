@@ -1,7 +1,7 @@
 # Deployment
 
 Two services, deployed separately: the FastAPI backend (`backend/`) on
-Render, and the Next.js frontend (`frontend/`) on Vercel. Both read from the
+Render, and the Next.js frontend (repo root) on Vercel. Both read from the
 same GitHub repo/branch — no shared build step between them.
 
 ## Backend → Render
@@ -53,8 +53,10 @@ ways to fix it, pick one:
 ## Frontend → Vercel
 
 1. On [vercel.com](https://vercel.com), **Add New** → **Project** → import
-   the same GitHub repo.
-2. **Root Directory**: `frontend`
+   the same GitHub repo (or use the existing connected project, if you have
+   one — it already auto-deploys this branch on every push).
+2. **Root Directory**: leave as default (repo root) — the Next.js app lives
+   at the repo root, not in a subdirectory.
 3. Framework preset: Next.js (auto-detected — no changes needed).
 4. **Environment Variables**: add
    ```
