@@ -14,4 +14,8 @@ COPY backend /app/backend
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Render (and similar platforms) assign the listen port via $PORT at
+# runtime instead of using a fixed one — fall back to 8000 for local
+# `docker run` where $PORT isn't set. Shell form (not exec-array form)
+# is required here so $PORT actually gets expanded.
+CMD uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}
