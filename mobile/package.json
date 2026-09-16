@@ -1,0 +1,20 @@
+{
+  "name": "pitch-model-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Capacitor iOS app shell wrapping the deployed Pitch Model web app.",
+  "scripts": {
+    "sync": "cap sync",
+    "open:ios": "cap open ios",
+    "add:ios": "cap add ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "typescript": "^7.0.2"
+  }
+}
