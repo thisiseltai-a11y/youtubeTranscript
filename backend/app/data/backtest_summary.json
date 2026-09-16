@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-09-16T15:35:27.266066+00:00",
+  "date_range": "2021-08-13 to 2026-09-06",
+  "n_matches": 1507,
+  "model_accuracy": 0.5421,
+  "model_log_loss": 0.9792,
+  "model_rps": 0.2032,
+  "baseline_accuracy": 0.4499,
+  "baseline_log_loss": 1.0627,
+  "baseline_rps": 0.2331,
+  "notes": "Walk-forward backtest: the model is refit using only matches strictly before each prediction, so this reflects what the model would have known at the time. RPS (Ranked Probability Score) is the standard football-forecasting metric; lower is better. Baseline uses only home-field base rates with no team-specific skill."
+}

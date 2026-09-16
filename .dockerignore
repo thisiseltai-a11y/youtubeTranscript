@@ -1,0 +1,7 @@
+**/.venv
+**/__pycache__
+**/*.pyc
+model/backtest_results.csv
+frontend/node_modules
+frontend/.next
+.git
