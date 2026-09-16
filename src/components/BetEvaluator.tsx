@@ -6,6 +6,8 @@ import type { BetEvaluation, FixturePrediction } from "@/lib/types";
 import { pct, signedPct } from "@/lib/format";
 
 const CUSTOM = "__custom__";
+const DEFAULT_KELLY_FRAC = "0.25";
+const DEFAULT_MIN_EDGE = "0.02";
 
 function NumberField({
   label,
@@ -13,12 +15,14 @@ function NumberField({
   onChange,
   step = 0.01,
   min,
+  disabled,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   step?: number;
   min?: number;
+  disabled?: boolean;
 }) {
   return (
     <label className="flex flex-col gap-1 text-xs text-neutral-500">
@@ -29,16 +33,27 @@ function NumberField({
         step={step}
         min={min}
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-black/10 bg-white px-2 py-1.5 text-sm text-neutral-900 dark:border-white/10 dark:bg-neutral-900 dark:text-white"
+        className="rounded-md border border-black/10 bg-white px-2 py-1.5 text-sm text-neutral-900 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 dark:border-white/10 dark:bg-neutral-900 dark:text-white dark:disabled:bg-white/5 dark:disabled:text-neutral-500"
       />
     </label>
+  );
+}
+
+function PredictionChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-black/10 px-2 py-1.5 text-center dark:border-white/10">
+      <div className="text-xs text-neutral-500">{label}</div>
+      <div className="text-sm font-semibold">{value}</div>
+    </div>
   );
 }
 
 export function BetEvaluator({ fixtures }: { fixtures: FixturePrediction[] }) {
   const [selected, setSelected] = useState<string>(fixtures.length ? "0" : CUSTOM);
   const [prevSelected, setPrevSelected] = useState(selected);
+  const isCustom = selected === CUSTOM;
 
   const initialFixture = fixtures[0];
   const [homeProb, setHomeProb] = useState(initialFixture ? initialFixture.home_win.toFixed(4) : "0.45");
@@ -49,14 +64,15 @@ export function BetEvaluator({ fixtures }: { fixtures: FixturePrediction[] }) {
   const [drawOdds, setDrawOdds] = useState("3.60");
   const [awayOdds, setAwayOdds] = useState("4.20");
 
-  const [kellyFrac, setKellyFrac] = useState("0.25");
-  const [minEdge, setMinEdge] = useState("0.02");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [kellyFrac, setKellyFrac] = useState(DEFAULT_KELLY_FRAC);
+  const [minEdge, setMinEdge] = useState(DEFAULT_MIN_EDGE);
 
   const [results, setResults] = useState<BetEvaluation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Prefill model probabilities from the selected fixture. Done during render
+  // Prefill the prediction from the selected fixture. Done during render
   // (the pattern React recommends for "adjust state when a prop changes")
   // rather than in an effect, since it only needs to run once per selection.
   if (selected !== prevSelected) {
@@ -116,15 +132,15 @@ export function BetEvaluator({ fixtures }: { fixtures: FixturePrediction[] }) {
     <section id="evaluator" className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       <h2 className="text-xl font-semibold">Bet evaluator</h2>
       <p className="mt-1 max-w-2xl text-sm text-neutral-500">
-        Pick a fixture (or enter your own probabilities), enter the decimal odds you&apos;re
-        seeing, and see the model&apos;s edge and a fractional-Kelly stake suggestion. Nothing
-        here places a bet — it&apos;s just the math.
+        Pick a match, type in the odds your sportsbook is offering, and see whether our
+        prediction thinks there&apos;s value. Nothing here places a bet — it&apos;s just the
+        math.
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-4">
           <label className="flex flex-col gap-1 text-xs text-neutral-500">
-            Match
+            1. Pick a match
             <select
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
@@ -135,21 +151,37 @@ export function BetEvaluator({ fixtures }: { fixtures: FixturePrediction[] }) {
                   {f.home_team} vs {f.away_team}
                 </option>
               ))}
-              <option value={CUSTOM}>Custom probabilities</option>
+              <option value={CUSTOM}>Enter my own prediction instead</option>
             </select>
           </label>
 
           <div>
-            <div className="mb-1 text-xs font-medium text-neutral-500">Model probabilities</div>
-            <div className="grid grid-cols-3 gap-2">
-              <NumberField label="Home win" value={homeProb} onChange={setHomeProb} step={0.001} min={0} />
-              <NumberField label="Draw" value={drawProb} onChange={setDrawProb} step={0.001} min={0} />
-              <NumberField label="Away win" value={awayProb} onChange={setAwayProb} step={0.001} min={0} />
+            <div className="mb-1 text-xs font-medium text-neutral-500">
+              {isCustom ? "Your prediction (win probabilities)" : "Our prediction for this match"}
             </div>
+            {isCustom ? (
+              <div className="grid grid-cols-3 gap-2">
+                <NumberField label="Home win" value={homeProb} onChange={setHomeProb} step={0.001} min={0} />
+                <NumberField label="Draw" value={drawProb} onChange={setDrawProb} step={0.001} min={0} />
+                <NumberField label="Away win" value={awayProb} onChange={setAwayProb} step={0.001} min={0} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                <PredictionChip label="Home win" value={pct(parseFloat(homeProb))} />
+                <PredictionChip label="Draw" value={pct(parseFloat(drawProb))} />
+                <PredictionChip label="Away win" value={pct(parseFloat(awayProb))} />
+              </div>
+            )}
           </div>
 
           <div>
-            <div className="mb-1 text-xs font-medium text-neutral-500">Market decimal odds</div>
+            <div className="mb-1 text-xs font-medium text-neutral-500">
+              2. Odds you&apos;re seeing at your sportsbook
+            </div>
+            <p className="mb-2 text-xs text-neutral-500">
+              Use decimal odds (e.g. 1.95, not +95 or 20/21) — most sportsbook apps let you
+              switch the odds format in settings if you only see American or fractional odds.
+            </p>
             <div className="grid grid-cols-3 gap-2">
               <NumberField label="Home win" value={homeOdds} onChange={setHomeOdds} min={1.01} />
               <NumberField label="Draw" value={drawOdds} onChange={setDrawOdds} min={1.01} />
@@ -157,9 +189,32 @@ export function BetEvaluator({ fixtures }: { fixtures: FixturePrediction[] }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <NumberField label="Kelly fraction" value={kellyFrac} onChange={setKellyFrac} step={0.05} min={0} />
-            <NumberField label="Min. edge to flag" value={minEdge} onChange={setMinEdge} step={0.01} min={0} />
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((v) => !v)}
+              className="text-xs font-medium text-neutral-500 underline decoration-dotted underline-offset-2 hover:text-neutral-700 dark:hover:text-neutral-300"
+            >
+              {showAdvanced ? "Hide" : "Show"} advanced settings
+            </button>
+            {showAdvanced && (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <NumberField
+                  label="Kelly fraction (bet sizing caution — lower is more conservative)"
+                  value={kellyFrac}
+                  onChange={setKellyFrac}
+                  step={0.05}
+                  min={0}
+                />
+                <NumberField
+                  label="Minimum edge to show a result"
+                  value={minEdge}
+                  onChange={setMinEdge}
+                  step={0.01}
+                  min={0}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -169,13 +224,14 @@ export function BetEvaluator({ fixtures }: { fixtures: FixturePrediction[] }) {
           </div>
           {!payload && (
             <p className="text-sm text-neutral-500">
-              Enter valid probabilities and odds (odds must be greater than 1) to see results.
+              Enter valid odds (greater than 1.00) for all three outcomes to see results.
             </p>
           )}
           {payload && error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           {payload && !error && results && results.length === 0 && (
             <p className="text-sm text-neutral-500">
-              No outcome clears the minimum edge threshold — the market looks fair or better here.
+              No value found here — the odds already look fair or better than our prediction, so
+              there&apos;s nothing to flag.
             </p>
           )}
           {payload && !error && results && results.length > 0 && (
@@ -191,14 +247,18 @@ export function BetEvaluator({ fixtures }: { fixtures: FixturePrediction[] }) {
                           : "font-semibold text-red-600 dark:text-red-400"
                       }
                     >
-                      {signedPct(b.edge)} edge
+                      {signedPct(b.edge)} value
                     </span>
                   </div>
-                  <div className="mt-1 grid grid-cols-2 gap-1 text-xs text-neutral-500">
-                    <div>Model: {pct(b.model_prob)}</div>
-                    <div>Market (de-vigged): {pct(b.market_prob_devigged)}</div>
-                    <div>Odds: {b.decimal_odds.toFixed(2)}</div>
-                    <div>Suggested stake: {pct(b.kelly_stake_pct, 2)} of bankroll</div>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    We think this happens {pct(b.model_prob)} of the time; the odds imply
+                    {" "}{pct(b.market_prob_devigged)}.
+                  </p>
+                  <div className="mt-2 flex items-center justify-between rounded-md bg-neutral-50 px-2 py-1.5 text-xs dark:bg-white/5">
+                    <span className="text-neutral-500">Odds: {b.decimal_odds.toFixed(2)}</span>
+                    <span className="font-medium">
+                      Suggested: {pct(b.kelly_stake_pct, 2)} of bankroll
+                    </span>
                   </div>
                 </div>
               ))}
