@@ -45,3 +45,14 @@ export interface BetEvaluation {
   edge: number;
   kelly_stake_pct: number;
 }
+
+export interface LiveScore {
+  fixture_id: number | null;
+  kickoff: string | null;
+  status_short: string | null;
+  status_label: string | null;
+  home_team: string | null;
+  away_team: string | null;
+  home_goals: number | null;
+  away_goals: number | null;
+}

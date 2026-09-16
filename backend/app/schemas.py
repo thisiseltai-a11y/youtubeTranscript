@@ -1,5 +1,5 @@
 """Pydantic request/response models for the API."""
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -72,3 +72,14 @@ class BacktestSummary(BaseModel):
 class ModelStatus(BaseModel):
     status: str
     fitted_at: str
+
+
+class LiveScore(BaseModel):
+    fixture_id: Optional[int]
+    kickoff: Optional[str]
+    status_short: Optional[str]
+    status_label: Optional[str]
+    home_team: Optional[str]
+    away_team: Optional[str]
+    home_goals: Optional[int]
+    away_goals: Optional[int]

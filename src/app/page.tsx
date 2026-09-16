@@ -1,6 +1,7 @@
 import { FixturesSection } from "@/components/FixturesSection";
 import { Header } from "@/components/Header";
 import { HowItWorks } from "@/components/HowItWorks";
+import { LiveScores } from "@/components/LiveScores";
 import { RatingsTable } from "@/components/RatingsTable";
 import { getBacktestSummary, getFixtures, getRatings } from "@/lib/api";
 import type { BacktestSummary, FixturePrediction, TeamRating } from "@/lib/types";
@@ -18,6 +19,7 @@ export default async function Home() {
     <>
       <Header />
       <main className="flex-1">
+        <LiveScores />
         <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             Statistical EPL predictions, built on a backtested model.

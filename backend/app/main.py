@@ -15,11 +15,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .backtest_summary import load_backtest_summary
+from .live_scores import fetch_today_scores
 from .schemas import (
     BacktestSummary,
     BetEvaluationOut,
     EvaluateBetRequest,
     FixturePrediction,
+    LiveScore,
     ModelStatus,
     TeamRating,
 )
@@ -116,6 +118,13 @@ def evaluate_bet(req: EvaluateBetRequest):
         }
         for b in bets
     ]
+
+
+@app.get("/live-scores", response_model=List[LiveScore])
+def live_scores():
+    """Real EPL scores for today from API-Football — not model output.
+    Returns an empty list (not an error) if API_FOOTBALL_KEY isn't configured."""
+    return fetch_today_scores()
 
 
 @app.get("/backtest-summary", response_model=BacktestSummary)

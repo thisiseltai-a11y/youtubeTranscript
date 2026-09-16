@@ -25,8 +25,24 @@ same GitHub repo/branch — no shared build step between them.
    curl https://pitch-model-api.onrender.com/ratings
    ```
 
-No environment variables are required — the backend has no secrets (no API
-keys, no database).
+### Optional: live scores (API-Football)
+
+`GET /live-scores` shows real, live EPL scores for today (separate from the
+prediction model). It's optional — if unconfigured, the endpoint just
+returns an empty list and the frontend hides that section entirely.
+
+To enable it:
+1. In the Render service → **Environment** tab → add an environment
+   variable: `API_FOOTBALL_KEY` = your key from
+   [api-football.com](https://www.api-football.com/) (free tier is 100
+   requests/day, plenty for this — the backend caches responses for 30
+   seconds so many visitors only cost one upstream request).
+2. Save — Render redeploys automatically with the new env var.
+3. Confirm: `curl https://<your-render-url>/live-scores` should return real
+   match data on a day EPL matches are being played, `[]` otherwise.
+
+No other environment variables are required — everything else about the
+backend has no secrets (no other API keys, no database).
 
 ### Cold-start / scheduler caveat (read before relying on daily refit)
 
