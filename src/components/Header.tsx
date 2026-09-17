@@ -6,15 +6,18 @@ const NAV_LINKS = [
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-10 border-b border-black/10 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-black/60">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-        <a href="#" className="font-semibold tracking-tight">
-          Pitch Model <span className="text-neutral-400">·</span>{" "}
-          <span className="text-sm font-normal text-neutral-500">EPL predictions</span>
+    <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3.5 sm:px-6">
+        <a href="#" className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand text-xs font-bold text-brand-foreground">
+            P
+          </span>
+          <span className="font-semibold tracking-tight">Pitch Model</span>
+          <span className="hidden text-sm font-normal text-muted sm:inline">EPL predictions</span>
         </a>
-        <nav className="hidden gap-5 text-sm text-neutral-600 sm:flex dark:text-neutral-300">
+        <nav className="hidden gap-6 text-sm font-medium text-muted sm:flex">
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="hover:text-neutral-900 dark:hover:text-white">
+            <a key={l.href} href={l.href} className="transition-colors hover:text-foreground">
               {l.label}
             </a>
           ))}

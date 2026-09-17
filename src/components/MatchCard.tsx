@@ -19,6 +19,47 @@ interface Market {
   explanation: string;
 }
 
+function OutcomeCell({ o, isLeading }: { o: Outcome; isLeading: boolean }) {
+  return (
+    <div className="min-w-0 rounded-lg bg-background px-2.5 py-2 text-center">
+      <div className="truncate text-[11px] text-muted">{o.label}</div>
+      <div className={isLeading ? "text-base font-bold text-brand" : "text-base font-bold"}>
+        {pct(o.prob)}
+      </div>
+      <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border">
+        <div
+          className={isLeading ? "h-full rounded-full bg-brand" : "h-full rounded-full bg-muted/60"}
+          style={{ width: `${Math.max(o.prob * 100, 3)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PillButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        active
+          ? "rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand"
+          : "rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:text-foreground"
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
 function OddsChecker({ outcomes }: { outcomes: Outcome[] }) {
   const [odds, setOdds] = useState<Record<string, string>>({});
   const [results, setResults] = useState<BetEvaluation[] | null>(null);
@@ -52,10 +93,10 @@ function OddsChecker({ outcomes }: { outcomes: Outcome[] }) {
   }
 
   return (
-    <div className="mt-2 rounded-md bg-neutral-50 p-2 dark:bg-white/5">
+    <div className="mt-3 rounded-lg bg-background p-2.5">
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${outcomes.length}, minmax(0,1fr))` }}>
         {outcomes.map((o) => (
-          <label key={o.key} className="flex flex-col gap-0.5 text-[11px] text-neutral-500">
+          <label key={o.key} className="flex flex-col gap-0.5 text-[11px] text-muted">
             {o.label} odds
             <input
               type="number"
@@ -64,7 +105,7 @@ function OddsChecker({ outcomes }: { outcomes: Outcome[] }) {
               min={1.01}
               value={odds[o.key] ?? ""}
               onChange={(e) => setOdds((s) => ({ ...s, [o.key]: e.target.value }))}
-              className="rounded border border-black/10 bg-white px-1.5 py-1 text-xs text-neutral-900 dark:border-white/10 dark:bg-neutral-900 dark:text-white"
+              className="rounded-md border border-border bg-surface px-1.5 py-1 text-xs text-foreground"
             />
           </label>
         ))}
@@ -73,26 +114,20 @@ function OddsChecker({ outcomes }: { outcomes: Outcome[] }) {
         type="button"
         onClick={check}
         disabled={loading}
-        className="mt-2 rounded-md border border-black/10 px-2 py-1 text-xs font-medium hover:bg-black/5 disabled:opacity-50 dark:border-white/10 dark:hover:bg-white/10"
+        className="mt-2 rounded-md bg-brand px-2.5 py-1 text-xs font-semibold text-brand-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {loading ? "Checking…" : "Check for value"}
       </button>
-      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="mt-1 text-xs text-negative">{error}</p>}
       {results && (
         <div className="mt-2 space-y-1">
           {results.length === 0 && (
-            <p className="text-xs text-neutral-500">No value found — these odds look fair or better.</p>
+            <p className="text-xs text-muted">No value found — these odds look fair or better.</p>
           )}
           {results.map((b) => (
             <div key={b.outcome} className="text-xs">
               <span className="font-medium capitalize">{b.outcome.replace(/_/g, " ")}</span>:{" "}
-              <span
-                className={
-                  b.edge >= 0
-                    ? "font-medium text-emerald-600 dark:text-emerald-400"
-                    : "font-medium text-red-600 dark:text-red-400"
-                }
-              >
+              <span className={b.edge >= 0 ? "font-semibold text-positive" : "font-semibold text-negative"}>
                 {b.edge >= 0 ? "+" : ""}
                 {(b.edge * 100).toFixed(1)}% value
               </span>{" "}
@@ -108,38 +143,28 @@ function OddsChecker({ outcomes }: { outcomes: Outcome[] }) {
 function MarketBlock({ market }: { market: Market }) {
   const [showWhy, setShowWhy] = useState(false);
   const [showOdds, setShowOdds] = useState(false);
+  const maxProb = Math.max(...market.outcomes.map((o) => o.prob));
 
   return (
-    <div className="rounded-lg border border-black/10 p-3 dark:border-white/10">
-      <div className="text-xs font-medium text-neutral-500">{market.title}</div>
+    <div className="rounded-xl border border-border bg-surface p-3">
+      <div className="text-xs font-medium text-muted">{market.title}</div>
       <div
         className="mt-2 grid gap-2"
         style={{ gridTemplateColumns: `repeat(${market.outcomes.length}, minmax(0,1fr))` }}
       >
         {market.outcomes.map((o) => (
-          <div key={o.key} className="rounded-md bg-neutral-50 px-2 py-1.5 text-center dark:bg-white/5">
-            <div className="truncate text-[11px] text-neutral-500">{o.label}</div>
-            <div className="text-sm font-semibold">{pct(o.prob)}</div>
-          </div>
+          <OutcomeCell key={o.key} o={o} isLeading={o.prob === maxProb} />
         ))}
       </div>
-      <div className="mt-2 flex gap-3 text-xs">
-        <button
-          type="button"
-          onClick={() => setShowWhy((v) => !v)}
-          className="text-neutral-500 underline decoration-dotted underline-offset-2 hover:text-neutral-700 dark:hover:text-neutral-300"
-        >
+      <div className="mt-2.5 flex gap-2">
+        <PillButton active={showWhy} onClick={() => setShowWhy((v) => !v)}>
           {showWhy ? "Hide reason" : "Why?"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowOdds((v) => !v)}
-          className="text-neutral-500 underline decoration-dotted underline-offset-2 hover:text-neutral-700 dark:hover:text-neutral-300"
-        >
+        </PillButton>
+        <PillButton active={showOdds} onClick={() => setShowOdds((v) => !v)}>
           {showOdds ? "Hide odds check" : "Check my sportsbook odds"}
-        </button>
+        </PillButton>
       </div>
-      {showWhy && <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-300">{market.explanation}</p>}
+      {showWhy && <p className="mt-2.5 text-xs leading-relaxed text-muted">{market.explanation}</p>}
       {showOdds && <OddsChecker outcomes={market.outcomes} />}
     </div>
   );
@@ -183,20 +208,20 @@ export function MatchCard({
   ];
 
   return (
-    <div className="rounded-xl border border-black/10 p-4 dark:border-white/10">
-      <div className="text-xs text-neutral-500">{fmtDate(f.date)}</div>
-      <div className="mt-1 flex items-center justify-between gap-2">
+    <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <div className="text-xs font-medium text-muted">{fmtDate(f.date)}</div>
+      <div className="mt-1.5 flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className="truncate font-medium">{f.home_team}</div>
+          <div className="truncate font-semibold">{f.home_team}</div>
           {f.home_thin_data && (
             <div className="mt-1">
               <ThinDataBadge />
             </div>
           )}
         </div>
-        <div className="shrink-0 text-xs text-neutral-400">vs</div>
+        <div className="shrink-0 text-xs font-medium text-muted">vs</div>
         <div className="min-w-0 text-right">
-          <div className="truncate font-medium">{f.away_team}</div>
+          <div className="truncate font-semibold">{f.away_team}</div>
           {f.away_thin_data && (
             <div className="mt-1 flex justify-end">
               <ThinDataBadge />
