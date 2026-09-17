@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { evaluateBet } from "@/lib/api";
-import { explainBtts, explainResult, explainTotalGoals } from "@/lib/explain";
+import { explainBtts, explainResult, explainTotalGoals, type Explanation } from "@/lib/explain";
 import { fmtDate, pct } from "@/lib/format";
 import type { BetEvaluation, FixturePrediction, TeamRating } from "@/lib/types";
 import { ThinDataBadge } from "./ThinDataBadge";
@@ -16,7 +16,28 @@ interface Outcome {
 interface Market {
   title: string;
   outcomes: Outcome[];
-  explanation: string;
+  explanation: Explanation;
+}
+
+function WhyPanel({ explanation }: { explanation: Explanation }) {
+  return (
+    <div className="mt-2.5 space-y-1.5 rounded-lg bg-background p-2.5">
+      {explanation.facts.map((f) => (
+        <div key={f.label} className="flex items-center justify-between gap-3 text-xs">
+          <span className="text-muted">{f.label}</span>
+          <span className="font-semibold">{f.value}</span>
+        </div>
+      ))}
+      {explanation.note && (
+        <div
+          className="mt-1.5 rounded-md px-2 py-1.5 text-[11px] leading-snug"
+          style={{ backgroundColor: "var(--warning-bg)", color: "var(--warning-fg)" }}
+        >
+          {explanation.note}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function OutcomeCell({ o, isLeading }: { o: Outcome; isLeading: boolean }) {
@@ -164,7 +185,7 @@ function MarketBlock({ market }: { market: Market }) {
           {showOdds ? "Hide odds check" : "Check my sportsbook odds"}
         </PillButton>
       </div>
-      {showWhy && <p className="mt-2.5 text-xs leading-relaxed text-muted">{market.explanation}</p>}
+      {showWhy && <WhyPanel explanation={market.explanation} />}
       {showOdds && <OddsChecker outcomes={market.outcomes} />}
     </div>
   );
