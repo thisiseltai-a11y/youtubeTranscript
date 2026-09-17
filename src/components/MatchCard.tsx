@@ -216,7 +216,7 @@ export function MatchCard({
         { key: "over_2_5", label: "Over 2.5", prob: f.over_2_5 },
         { key: "under_2_5", label: "Under 2.5", prob: f.under_2_5 },
       ],
-      explanation: explainTotalGoals(f),
+      explanation: explainTotalGoals(f, homeRating, awayRating),
     },
     {
       title: "Both teams to score",
@@ -224,7 +224,7 @@ export function MatchCard({
         { key: "btts_yes", label: "Yes", prob: f.btts_yes },
         { key: "btts_no", label: "No", prob: f.btts_no },
       ],
-      explanation: explainBtts(f),
+      explanation: explainBtts(f, homeRating, awayRating),
     },
   ];
 

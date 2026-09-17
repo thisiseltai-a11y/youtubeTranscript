@@ -11,6 +11,9 @@ class TeamRating(BaseModel):
     net_rating: float
     current_season_matches: int
     thin_data: bool
+    form_last5: List[str]
+    goals_scored_per_game: Optional[float]
+    goals_conceded_per_game: Optional[float]
 
 
 class FixturePrediction(BaseModel):

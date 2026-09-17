@@ -115,11 +115,35 @@ class ModelService:
     def fitted_at(self) -> datetime:
         return self._get_cache().fitted_at
 
+    def team_form(self, cache: RatingsCache, team: str) -> dict:
+        """Last-5 results (most recent first) and career scored/conceded-per-game,
+        computed directly from loaded match history — not model output."""
+        m = cache.matches
+        team_matches = m[(m.home_team == team) | (m.away_team == team)].sort_values("date")
+        if len(team_matches) == 0:
+            return {"form_last5": [], "goals_scored_per_game": None, "goals_conceded_per_game": None}
+
+        scored, conceded, form = [], [], []
+        for _, row in team_matches.iterrows():
+            is_home = row["home_team"] == team
+            gf = row["home_goals"] if is_home else row["away_goals"]
+            ga = row["away_goals"] if is_home else row["home_goals"]
+            scored.append(gf)
+            conceded.append(ga)
+            form.append("W" if gf > ga else "L" if gf < ga else "D")
+
+        return {
+            "form_last5": form[-5:][::-1],
+            "goals_scored_per_game": round(sum(scored) / len(scored), 2),
+            "goals_conceded_per_game": round(sum(conceded) / len(conceded), 2),
+        }
+
     def ratings(self) -> list[dict]:
         cache = self._get_cache()
         rows = []
         for _, r in cache.model.ratings_table().iterrows():
             team = r["team"]
+            form = self.team_form(cache, team)
             rows.append({
                 "team": team,
                 "attack": float(r["attack"]),
@@ -127,6 +151,9 @@ class ModelService:
                 "net_rating": float(r["net_rating"]),
                 "current_season_matches": cache.current_season_counts.get(team, 0),
                 "thin_data": self.is_thin(cache, team),
+                "form_last5": form["form_last5"],
+                "goals_scored_per_game": form["goals_scored_per_game"],
+                "goals_conceded_per_game": form["goals_conceded_per_game"],
             })
         return rows
 

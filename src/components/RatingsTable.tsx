@@ -14,6 +14,32 @@ const COLUMNS: { key: SortKey; label: string; align?: "right" }[] = [
   { key: "current_season_matches", label: "Matches this season", align: "right" },
 ];
 
+function FormChips({ form }: { form: string[] }) {
+  if (form.length === 0) {
+    return <span className="text-xs text-muted">—</span>;
+  }
+  return (
+    <div className="flex justify-end gap-1">
+      {form.map((r, i) => (
+        <span
+          key={i}
+          className={
+            "flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold " +
+            (r === "W"
+              ? "bg-brand-soft text-brand"
+              : r === "L"
+                ? "text-negative"
+                : "text-muted")
+          }
+          style={r === "L" ? { backgroundColor: "rgba(220, 38, 38, 0.12)" } : r === "D" ? { backgroundColor: "var(--border)" } : undefined}
+        >
+          {r}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function RatingsTable({ ratings }: { ratings: TeamRating[] }) {
   const [sortKey, setSortKey] = useState<SortKey>("net_rating");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -40,7 +66,7 @@ export function RatingsTable({ ratings }: { ratings: TeamRating[] }) {
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
-      <table className="w-full min-w-[560px] text-sm">
+      <table className="w-full min-w-[680px] text-sm">
         <thead>
           <tr className="border-b border-border bg-background">
             <th className="w-10 px-3 py-2.5" />
@@ -56,6 +82,9 @@ export function RatingsTable({ ratings }: { ratings: TeamRating[] }) {
                 {sortKey === col.key && (sortDir === "asc" ? " ↑" : " ↓")}
               </th>
             ))}
+            <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-muted uppercase">
+              Last 5
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -79,6 +108,9 @@ export function RatingsTable({ ratings }: { ratings: TeamRating[] }) {
                 {r.net_rating.toFixed(3)}
               </td>
               <td className="px-3 py-2.5 text-right tabular-nums text-muted">{r.current_season_matches}</td>
+              <td className="px-3 py-2.5">
+                <FormChips form={r.form_last5} />
+              </td>
             </tr>
           ))}
         </tbody>

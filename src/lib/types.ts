@@ -5,6 +5,9 @@ export interface TeamRating {
   net_rating: number;
   current_season_matches: number;
   thin_data: boolean;
+  form_last5: string[];
+  goals_scored_per_game: number | null;
+  goals_conceded_per_game: number | null;
 }
 
 export interface FixturePrediction {
