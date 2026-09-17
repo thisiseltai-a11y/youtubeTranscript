@@ -28,9 +28,11 @@ logger = logging.getLogger("dixoncoles.live_scores")
 API_FOOTBALL_BASE = "https://v3.football.api-sports.io"
 PREMIER_LEAGUE_ID = 39
 CACHE_SECONDS = 30
+FIXTURES_CACHE_SECONDS = 3600  # upcoming fixtures barely change minute to minute
 
 _lock = threading.Lock()
 _cache: dict = {"fetched_at": 0.0, "data": []}
+_fixtures_cache: dict = {"fetched_at": 0.0, "data": None}
 
 
 def _current_season_year(today: date) -> int:
@@ -105,4 +107,52 @@ def fetch_today_scores() -> list[dict]:
     with _lock:
         _cache["fetched_at"] = time.time()
         _cache["data"] = results
+    return results
+
+
+def fetch_upcoming_fixtures(n: int = 8) -> list[dict] | None:
+    """The next N real EPL fixtures (correct dates, real opponents — not a
+    stale local file). Returns None (not []) on failure or missing key, so
+    callers can tell "no key configured" apart from "genuinely no fixtures"
+    and fall back to the bundled dataset instead of showing nothing."""
+    key = _api_key()
+    if not key:
+        return None
+
+    with _lock:
+        age = time.time() - _fixtures_cache["fetched_at"]
+        if age < FIXTURES_CACHE_SECONDS and _fixtures_cache["data"] is not None:
+            return _fixtures_cache["data"]
+
+    try:
+        resp = requests.get(
+            f"{API_FOOTBALL_BASE}/fixtures",
+            headers={"x-apisports-key": key},
+            params={
+                "league": PREMIER_LEAGUE_ID,
+                "season": _current_season_year(date.today()),
+                "next": n,
+            },
+            timeout=10,
+        )
+        resp.raise_for_status()
+        payload = resp.json()
+    except Exception as exc:
+        logger.warning("API-Football upcoming-fixtures request failed: %s", exc)
+        with _lock:
+            return _fixtures_cache["data"]
+
+    results = []
+    for item in payload.get("response", []):
+        fixture = item.get("fixture", {})
+        teams = item.get("teams", {})
+        results.append({
+            "date": fixture.get("date"),
+            "home_team": teams.get("home", {}).get("name"),
+            "away_team": teams.get("away", {}).get("name"),
+        })
+
+    with _lock:
+        _fixtures_cache["fetched_at"] = time.time()
+        _fixtures_cache["data"] = results
     return results

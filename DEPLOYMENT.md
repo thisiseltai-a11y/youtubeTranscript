@@ -25,21 +25,34 @@ same GitHub repo/branch — no shared build step between them.
    curl https://gambitparlay-api.onrender.com/ratings
    ```
 
-### Optional: live scores (API-Football)
+### Optional but recommended: API-Football
 
-`GET /live-scores` shows real, live EPL scores for today (separate from the
-prediction model). It's optional — if unconfigured, the endpoint just
-returns an empty list and the frontend hides that section entirely.
+Setting `API_FOOTBALL_KEY` unlocks two things:
+
+1. `GET /live-scores` — real, live EPL scores for today (separate from the
+   prediction model). Without a key, this just returns `[]` and the
+   frontend hides that section.
+2. `GET /fixtures` sources its **upcoming matches from API-Football
+   instead of the bundled dataset**, when a key is set. This matters: the
+   free `openfootball/football.json` dataset the model trains on is
+   community-maintained and can lag real fixtures by a week or more (it's
+   fine for historical training data, but stale for "what's next"). With a
+   key configured, `/fixtures` shows the real next matches with correct
+   dates; without one, it falls back to the bundled dataset's next
+   unplayed matchday, which may be outdated.
 
 To enable it:
 1. In the Render service → **Environment** tab → add an environment
    variable: `API_FOOTBALL_KEY` = your key from
    [api-football.com](https://www.api-football.com/) (free tier is 100
-   requests/day, plenty for this — the backend caches responses for 30
-   seconds so many visitors only cost one upstream request).
+   requests/day, plenty for this — both endpoints cache responses
+   server-side, 30 seconds for live scores and 1 hour for upcoming
+   fixtures, so many visitors only cost one upstream request per window).
 2. Save — Render redeploys automatically with the new env var.
 3. Confirm: `curl https://<your-render-url>/live-scores` should return real
    match data on a day EPL matches are being played, `[]` otherwise.
+   `curl https://<your-render-url>/fixtures` should show matches with
+   today-or-later dates instead of a possibly stale date.
 
 No other environment variables are required — everything else about the
 backend has no secrets (no other API keys, no database).
