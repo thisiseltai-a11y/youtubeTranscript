@@ -1,9 +1,9 @@
 {
-  "name": "pitch-model-mobile",
+  "name": "gambit-parlay-mobile",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Capacitor iOS app shell wrapping the deployed Pitch Model web app.",
+  "description": "Capacitor iOS app shell wrapping the deployed gambitParlay web app.",
   "scripts": {
     "sync": "cap sync",
     "open:ios": "cap open ios",

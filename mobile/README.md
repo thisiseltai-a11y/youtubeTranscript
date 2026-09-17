@@ -1,4 +1,4 @@
-# Pitch Model — iOS app shell (Capacitor)
+# gambitParlay — iOS app shell (Capacitor)
 
 This wraps the deployed web app (Phase 2) in a native iOS shell using
 Capacitor. It does **not** bundle a static build of the site — it points a
@@ -14,8 +14,8 @@ Mac — this container is Linux and can't build or sign an iOS app.
 
 ## What's already done here
 
-- `capacitor.config.ts` — app id `com.pitchmodel.app`, app name "Pitch
-  Model", pointed at a placeholder production URL.
+- `capacitor.config.ts` — app id `com.gambitparlay.app`, app name
+  "gambitParlay", pointed at a placeholder production URL.
 - `ios/` — a real, generated Xcode project (`cap add ios` was run and
   succeeded in this environment, since generating the project skeleton
   doesn't require Xcode — only building and signing does).
@@ -43,7 +43,7 @@ Mac — this container is Linux and can't build or sign an iOS app.
    - Select the `App` target → *Signing & Capabilities* → sign in with your
      Apple ID and select your team (requires the paid Apple Developer
      Program, see below).
-   - Set a unique bundle identifier if `com.pitchmodel.app` is already taken
+   - Set a unique bundle identifier if `com.gambitparlay.app` is already taken
      (Xcode will tell you).
    - Build and run on a simulator or your own device to confirm it loads
      your deployed site correctly before doing anything else.
@@ -135,5 +135,5 @@ the policy can be short and honest. It should state:
 A single static page hosted at e.g. `/privacy` on the Next.js frontend
 satisfies this — Apple requires a URL in App Store Connect, not just an
 in-app screen. This has not been built yet; it's a small addition to
-`frontend/src/app/privacy/page.tsx` once you're ready to write the final
-copy (a template based on the bullets above can be dropped in fast).
+`src/app/privacy/page.tsx` once you're ready to write the final copy
+(a template based on the bullets above can be dropped in fast).

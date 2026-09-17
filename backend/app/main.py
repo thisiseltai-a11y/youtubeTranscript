@@ -49,7 +49,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Dixon-Coles EPL Predictions API",
+    title="gambitParlay API",
     description="Wraps a backtested Dixon-Coles Poisson model for EPL match predictions.",
     lifespan=lifespan,
 )

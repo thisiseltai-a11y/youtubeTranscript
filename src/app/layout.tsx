@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pitch Model — EPL predictions",
+  title: "gambitParlay — EPL predictions",
   description:
     "A backtested Dixon-Coles Poisson model for English Premier League match predictions. Statistical analysis, not betting advice.",
 };

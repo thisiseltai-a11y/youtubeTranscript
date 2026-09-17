@@ -1,4 +1,4 @@
-# Pitch Model
+# gambitParlay
 
 Statistical EPL match predictions from a backtested Dixon-Coles Poisson
 model, wrapped as a deployable web app (and prepped for an iOS shell).

@@ -10,8 +10,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const PRODUCTION_URL = "https://REPLACE-WITH-YOUR-VERCEL-DOMAIN.vercel.app";
 
 const config: CapacitorConfig = {
-  appId: "com.pitchmodel.app",
-  appName: "Pitch Model",
+  appId: "com.gambitparlay.app",
+  appName: "gambitParlay",
   webDir: "www",
   server: {
     url: PRODUCTION_URL,

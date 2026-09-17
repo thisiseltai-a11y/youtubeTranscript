@@ -19,10 +19,10 @@ same GitHub repo/branch — no shared build step between them.
 7. Plan: the free tier works for testing. See the **cold-start caveat**
    below before relying on it for anything real.
 8. Deploy. Once live, note the URL — something like
-   `https://pitch-model-api.onrender.com`. Confirm it works:
+   `https://gambitparlay-api.onrender.com`. Confirm it works:
    ```bash
-   curl https://pitch-model-api.onrender.com/status
-   curl https://pitch-model-api.onrender.com/ratings
+   curl https://gambitparlay-api.onrender.com/status
+   curl https://gambitparlay-api.onrender.com/ratings
    ```
 
 ### Optional: live scores (API-Football)
@@ -76,7 +76,7 @@ ways to fix it, pick one:
 3. Framework preset: Next.js (auto-detected — no changes needed).
 4. **Environment Variables**: add
    ```
-   NEXT_PUBLIC_API_BASE_URL = https://pitch-model-api.onrender.com
+   NEXT_PUBLIC_API_BASE_URL = https://gambitparlay-api.onrender.com
    ```
    (your actual Render URL from above, no trailing slash).
 5. Deploy. Vercel gives you a `https://<project>.vercel.app` URL.
